@@ -42,7 +42,7 @@ Add a config/cassandra.yml:
 development:
   adapter: cassandra
   keyspace: my_app_development
-  servers: 127.0.0.1:9160
+  servers: ["127.0.0.1:9160"]
   thrift:
     timeout: 20
     retries: 2
