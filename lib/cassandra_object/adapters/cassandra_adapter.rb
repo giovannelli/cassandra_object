@@ -1,5 +1,5 @@
-gem 'cassandra-cql'
-require 'cassandra-cql'
+gem 'cassandra-driver'
+require 'cassandra-driver'
 
 module CassandraObject
   module Adapters
@@ -51,15 +51,46 @@ module CassandraObject
         'KEY'
       end
 
-      def connection
-        @connection ||= begin
-          thrift_options = (config[:thrift] || {})
-          CassandraCQL::Database.new(servers, {keyspace: config[:keyspace]}, thrift_options)
+      def cassandra_cluster_options
+        cluster_options = config.slice(*[
+          :hosts, 
+          :port,
+          :username,
+          :password,
+          :ssl,
+          :server_cert,
+          :client_cert,
+          :private_key,
+          :passphrase,
+          :compression,
+          :load_balancing_policy,
+          :reconnection_policy,
+          :retry_policy,
+          :consistency,
+          :trace,
+          :page_size,
+          :credentials,
+          :auth_provider,
+          :compressor,
+          :futures_factory
+        ])
+        {
+          load_balancing_policy: "Cassandra::LoadBalancing::Policies::%s",
+          reconnection_policy: "Cassandra::Reconnection::Policies::%s",
+          retry_policy: "Cassandra::Retry::Policies::%s"
+        }.each do |policy_key, class_template|
+          if cluster_options[policy_key]
+            cluster_options[policy_key] = (class_template % [policy_key.classify]).constantize
+          end
         end
+        cluster_options
       end
 
-      def servers
-        Array.wrap(config[:servers] || "127.0.0.1:9160")
+      def connection
+        @connection ||= begin
+          cluster = Cassandra.connect cassandra_cluster_options
+          cluster.connect config[:keyspace]
+        end
       end
 
       def execute(statement)
