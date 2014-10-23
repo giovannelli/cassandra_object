@@ -10,7 +10,7 @@ group :test do
 end
 
 group :cassandra do
-  gem 'cassandra-cql'
+  gem 'cassandra-driver'
 end
 
 group :hstore do
