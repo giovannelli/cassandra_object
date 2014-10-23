@@ -1,5 +1,5 @@
 gem 'cassandra-driver'
-require 'cassandra-driver'
+require 'cassandra'
 
 module CassandraObject
   module Adapters
