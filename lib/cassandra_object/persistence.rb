@@ -6,6 +6,7 @@ module CassandraObject
       class_attribute :batch_statements
     end
 
+
     module ClassMethods
       def remove(ids)
         adapter.delete column_family, ids
@@ -39,10 +40,10 @@ module CassandraObject
 
       def instantiate(id, attributes)
         allocate.tap do |object|
-          object.instance_variable_set("@id", id) if id
-          object.instance_variable_set("@new_record", false)
-          object.instance_variable_set("@destroyed", false)
-          object.instance_variable_set("@attributes", typecast_persisted_attributes(object, attributes))
+          object.instance_variable_set('@id', id) if id
+          object.instance_variable_set('@new_record', false)
+          object.instance_variable_set('@destroyed', false)
+          object.instance_variable_set('@attributes', typecast_persisted_attributes(object, attributes))
         end
       end
 
@@ -60,27 +61,27 @@ module CassandraObject
 
       private
 
-        def quote_columns(column_names)
-          column_names.map { |name| "'#{name}'" }
+      def quote_columns(column_names)
+        column_names.map { |name| "'#{name}'" }
+      end
+
+      def typecast_persisted_attributes(object, attributes)
+        attributes.each do |key, value|
+          if definition = attribute_definitions[key.to_s]
+            attributes[key] = definition.instantiate(object, value)
+          else
+            attributes.delete(key)
+          end
         end
 
-        def typecast_persisted_attributes(object, attributes)
-          attributes.each do |key, value|
-            if definition = attribute_definitions[key]
-              attributes[key] = definition.instantiate(object, value)
-            else
-              attributes.delete(key)
-            end
+        attribute_definitions.each_value do |definition|
+          unless definition.default.nil? || attributes.has_key?(definition.name)
+            attributes[definition.name] = definition.default
           end
-
-          attribute_definitions.each_value do |definition|
-            unless definition.default.nil? || attributes.has_key?(definition.name)
-              attributes[definition.name] = definition.default
-            end
-          end
-
-          attributes
         end
+
+        attributes
+      end
     end
 
     def new_record?
@@ -122,9 +123,9 @@ module CassandraObject
 
     def becomes(klass)
       became = klass.new
-      became.instance_variable_set("@attributes", @attributes)
-      became.instance_variable_set("@new_record", new_record?)
-      became.instance_variable_set("@destroyed", destroyed?)
+      became.instance_variable_set('@attributes', @attributes)
+      became.instance_variable_set('@new_record', new_record?)
+      became.instance_variable_set('@destroyed', destroyed?)
       became
     end
 
@@ -136,18 +137,18 @@ module CassandraObject
 
     private
 
-      def create
-        @new_record = false
-        write :insert_record
-      end
+    def create
+      @new_record = false
+      write :insert_record
+    end
 
-      def update
-        write :update_record
-      end
+    def update
+      write :update_record
+    end
 
-      def write(method)
-        changed_attributes = Hash[changed.map { |attr| [attr, read_attribute(attr)] }]
-        self.class.send(method, id, changed_attributes)
-      end
+    def write(method)
+      changed_attributes = Hash[changed.map { |attr| [attr, read_attribute(attr)] }]
+      self.class.send(method, id, changed_attributes)
+    end
   end
 end

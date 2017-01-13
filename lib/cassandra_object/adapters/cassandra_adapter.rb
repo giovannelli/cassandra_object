@@ -1,21 +1,22 @@
 gem 'cassandra-driver'
 require 'cassandra'
+require 'logger'
 
 module CassandraObject
   module Adapters
     class CassandraAdapter < AbstractAdapter
       class QueryBuilder
+
         def initialize(adapter, scope)
-          @adapter  = adapter
-          @scope    = scope
+          @adapter = adapter
+          @scope = scope
         end
 
         def to_query
           [
-            "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-            @adapter.write_option_string,
-            where_string,
-            limit_string
+              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+              where_string,
+              limit_string
           ].delete_if(&:blank?) * ' '
         end
 
@@ -28,84 +29,99 @@ module CassandraObject
         end
 
         def where_string
-          wheres = @scope.where_values.dup
-          if @scope.id_values.any?
-            wheres << @adapter.create_ids_where_clause(@scope.id_values)
-          end
-
-          if wheres.any?
-            "WHERE #{wheres * ' AND '}"
-          end
+          wheres = []
+          wheres << @adapter.create_ids_where_clause(@scope.id_values)
+          wheres.flatten!
+          "WHERE #{wheres * ' AND '}" if wheres.any?
         end
 
         def limit_string
-          if @scope.limit_value
-            "LIMIT #{@scope.limit_value}"
-          else
-            ""
-          end
+          @scope.limit_value ? "LIMIT #{@scope.limit_value}" : ""
         end
       end
 
       def primary_key_column
-        'KEY'
+        'key'
       end
 
       def cassandra_cluster_options
         cluster_options = config.slice(*[
-          :hosts, 
-          :port,
-          :username,
-          :password,
-          :ssl,
-          :server_cert,
-          :client_cert,
-          :private_key,
-          :passphrase,
-          :compression,
-          :load_balancing_policy,
-          :reconnection_policy,
-          :retry_policy,
-          :consistency,
-          :trace,
-          :page_size,
-          :credentials,
-          :auth_provider,
-          :compressor,
-          :futures_factory
+            :hosts,
+            :port,
+            :username,
+            :password,
+            :ssl,
+            :server_cert,
+            :client_cert,
+            :private_key,
+            :passphrase,
+            :compression,
+            :load_balancing_policy,
+            :reconnection_policy,
+            :retry_policy,
+            :consistency,
+            :trace,
+            :page_size,
+            :credentials,
+            :auth_provider,
+            :compressor,
+            :futures_factory,
+            :connect_timeout,
+            :request_timeout,
+            :protocol_version,
+            :logger
         ])
         {
-          load_balancing_policy: "Cassandra::LoadBalancing::Policies::%s",
-          reconnection_policy: "Cassandra::Reconnection::Policies::%s",
-          retry_policy: "Cassandra::Retry::Policies::%s"
+            load_balancing_policy: "Cassandra::LoadBalancing::Policies::%s",
+            reconnection_policy: "Cassandra::Reconnection::Policies::%s",
+            retry_policy: "Cassandra::Retry::Policies::%s"
         }.each do |policy_key, class_template|
           if cluster_options[policy_key]
             cluster_options[policy_key] = (class_template % [policy_key.classify]).constantize
           end
         end
-        cluster_options
+        cluster_options.merge!({ max_schema_agreement_wait: 1 })
+        puts "\n\n\n\n" + cluster_options.inspect + "\n\n\n\n"
+        return cluster_options
       end
+
 
       def connection
         @connection ||= begin
-          cluster = Cassandra.connect cassandra_cluster_options
+          cluster = Cassandra.cluster cassandra_cluster_options
           cluster.connect config[:keyspace]
         end
       end
 
-      def execute(statement)
-        ActiveSupport::Notifications.instrument("cql.cassandra_object", cql: statement) do
-          connection.execute statement
+      def execute(statement, arguments = [])
+        # puts "===== execute ======= "
+        # puts statement
+        # puts arguments.inspect
+        # puts arguments.class
+        # puts "===== execute ======= "
+        ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
+          connection.execute statement, arguments: arguments
         end
       end
 
       def select(scope)
-        statement = QueryBuilder.new(self, scope).to_query
+        qb = QueryBuilder.new(self, scope)
 
-        execute(statement).fetch do |cql_row|
+        h = Hash.new
+
+        # TODO FIX ON RUBY-DRIVER
+        if scope.id_values.size > 1
+          arguments = nil
+          statement = qb.to_query.gsub('?', scope.id_values.map{|id| "'#{id}'"}.join(',') )
+        else
+          arguments = scope.id_values
+          statement = qb.to_query
+        end
+        execute(statement, arguments).each do |cql_row|
           attributes = cql_row.to_hash
           key = attributes.delete(primary_key_column)
-          yield(key, attributes) unless attributes.empty?
+          h[attributes.values[0]] = attributes.values[1]
+          yield(key, h) unless h.empty?
         end
       end
 
@@ -118,41 +134,39 @@ module CassandraObject
       end
 
       def write(table, id, attributes)
-        if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
-          insert_attributes = {primary_key_column => id}.update(not_nil_attributes)
-          statement = "INSERT INTO #{table} (#{quote_columns(insert_attributes.keys) * ','}) VALUES (#{Array.new(insert_attributes.size, '?') * ','})#{write_option_string}"
-          execute_batchable sanitize(statement, *insert_attributes.values)
-        end
+        batch = connection.batch do |b|
 
-        if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
-          execute_batchable sanitize("DELETE #{quote_columns(nil_attributes.keys) * ','} FROM #{table}#{write_option_string} WHERE #{primary_key_column} = ?", id)
+          if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
+            not_nil_attributes.each do |column, value|
+              b.add("INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES ('#{id}','#{column}','#{value}')")
+            end
+          end
+
+          if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
+            nil_attributes.each do |column, value|
+              b.add("DELETE value FROM #{table} WHERE #{primary_key_column} = '#{id}' AND column1='#{column}'")
+            end
+          end
         end
+        connection.execute(batch, consistency: :all)
       end
 
       def delete(table, ids)
-        statement = "DELETE FROM #{table}#{write_option_string} WHERE #{create_ids_where_clause(ids)}"
-
-        execute_batchable statement
-      end
-
-      def execute_batch(statements)
-        raise 'No can do' if statements.empty?
-
-        stmt = [
-          "BEGIN BATCH#{write_option_string(true)}",
-          statements * "\n",
-          'APPLY BATCH'
-        ] * "\n"
-
-        execute stmt
+        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}"
+        puts "\n\n\n\n\n\n\n statementssssssss #{ids}" + statement.inspect
+        execute statement, [ids]
       end
 
       # SCHEMA
       def create_table(table_name, options = {})
-        stmt = "CREATE COLUMNFAMILY #{table_name} " +
-               "(KEY varchar PRIMARY KEY)"
+        stmt = "CREATE TABLE #{table_name} (" +
+            'key text,' +
+            'column1 text,'  +
+            'value text,'  +
+            'PRIMARY KEY (key, column1)' +
+            ') WITH COMPACT STORAGE'
 
-        schema_execute statement_with_options(stmt, options), config[:keyspace]
+        schema_execute stmt, config[:keyspace]
       end
 
       def drop_table(table_name)
@@ -160,9 +174,14 @@ module CassandraObject
       end
 
       def schema_execute(cql, keyspace)
-        schema_db = CassandraCQL::Database.new(CassandraObject::Base.adapter.servers, {keyspace: keyspace}, {connect_timeout: 30, timeout: 30})
-        schema_db.execute cql
+        schema_db = Cassandra.cluster cassandra_cluster_options
+        connection = schema_db.connect keyspace
+        puts cql
+        cql = connection.prepare(cql)
+        puts cql.inspect
+        connection.execute cql
       end
+
       # /SCHEMA
 
       def consistency
@@ -173,16 +192,10 @@ module CassandraObject
         @consistency = val
       end
 
-      def write_option_string(ignore_batching = false)
-        if (ignore_batching || !batching?) && consistency
-          " USING CONSISTENCY #{consistency}"
-        end
-      end
-
       def statement_with_options(stmt, options)
         if options.any?
-          with_stmt = options.map do |k,v|
-            "#{k} = #{CassandraCQL::Statement.quote(v)}"
+          with_stmt = options.map do |k, v|
+            "#{k} = #{v}"
           end.join(' AND ')
 
           "#{stmt} WITH #{with_stmt}"
@@ -192,20 +205,18 @@ module CassandraObject
       end
 
       def create_ids_where_clause(ids)
+        return ids if ids.empty?
         ids = ids.first if ids.is_a?(Array) && ids.one?
         sql = ids.is_a?(Array) ? "#{primary_key_column} IN (?)" : "#{primary_key_column} = ?"
-        sanitize(sql, ids)
+        return sql
       end
 
       private
 
-        def sanitize(statement, *bind_vars)
-          CassandraCQL::Statement.sanitize(statement, bind_vars).force_encoding(Encoding::UTF_8)
-        end
+      def quote_columns(column_names)
+        column_names.map { |name| "'#{name}'" }
+      end
 
-        def quote_columns(column_names)
-          column_names.map { |name| "'#{name}'" }
-        end
 
     end
   end

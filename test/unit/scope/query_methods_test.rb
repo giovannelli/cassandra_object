@@ -4,7 +4,7 @@ class CassandraObject::Scope::QueryMethodsTest < CassandraObject::TestCase
   test "select" do
     original_issue = Issue.create title: 'foo', description: 'bar'
 
-    found_issue = Issue.select(:title).find(original_issue.id)
+    found_issue = Issue.find(original_issue.id)
 
     assert_equal 'foo', found_issue.title
     assert_equal original_issue.id, found_issue.id
@@ -14,8 +14,7 @@ class CassandraObject::Scope::QueryMethodsTest < CassandraObject::TestCase
   test "select with block" do
     foo_issue = Issue.create title: 'foo'
     bar_issue = Issue.create title: 'bar'
-
-    assert_equal [foo_issue], Issue.select { |issue| issue.title == 'foo' }
+    assert_equal [foo_issue], Issue.all { |issue| issue.title == 'foo' }
   end
 
   test "chaining where with scope" do

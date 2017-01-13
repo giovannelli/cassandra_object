@@ -1,4 +1,4 @@
-source "http://rubygems.org"
+source 'http://rubygems.org'
 gemspec
 
 gem 'rake'
@@ -11,9 +11,4 @@ end
 
 group :cassandra do
   gem 'cassandra-driver'
-end
-
-group :hstore do
-  gem 'activerecord'
-  gem 'pg'
 end

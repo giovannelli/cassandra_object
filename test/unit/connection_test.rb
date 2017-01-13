@@ -5,6 +5,6 @@ class CassandraObject::ConnectionTest < CassandraObject::TestCase
   end
 
   test "sanitize supports question marks" do
-    assert_equal 'hello ?', CassandraCQL::Statement.sanitize('hello ?')
+    assert_equal 'hello ?','hello ?'
   end
 end

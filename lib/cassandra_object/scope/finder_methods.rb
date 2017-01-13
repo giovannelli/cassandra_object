@@ -20,7 +20,7 @@ module CassandraObject
       end
 
       def first
-        limit(1).to_a.first
+        to_a.first
       end
 
       private
@@ -38,9 +38,7 @@ module CassandraObject
         def find_some(ids)
           ids = ids.flatten
           return [] if ids.empty?
-
           ids = ids.compact.map(&:to_s).uniq
-
           where_ids(ids).to_a
         end
     end

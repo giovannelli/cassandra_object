@@ -1,4 +1,4 @@
-require 'cassandra_object/schema/tasks'
+require 'cassandra'
 
 module CassandraObject
   class Schema
@@ -7,15 +7,15 @@ module CassandraObject
     class << self
       DEFAULT_CREATE_KEYSPACE = {
         'strategy_class' => 'SimpleStrategy',
-        'strategy_options:replication_factor' => 1
+        'strategy_options' => 'replication_factor:1'
       }
 
       def create_keyspace(keyspace, options = nil)
-        stmt = "CREATE KEYSPACE #{keyspace}"
+        stmt = "CREATE KEYSPACE #{keyspace} WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"
 
-        options ||= DEFAULT_CREATE_KEYSPACE
+        options ||= {} #DEFAULT_CREATE_KEYSPACE
 
-        system_execute adapter.statement_with_options(stmt, options)
+        system_execute stmt #adapter.statement_with_options(stmt, options)
       end
 
       def drop_keyspace(keyspace)

@@ -13,8 +13,7 @@ module CassandraObject
           if config = config[Rails.env]
             self.config = {
               keyspace: config['keyspace'],
-              servers: config['servers'],
-              thrift: config['thrift']
+              hosts: config['hosts'],
             }
           else
             raise "Missing environment #{Rails.env} in cassandra.yml"

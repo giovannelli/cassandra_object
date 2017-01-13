@@ -2,10 +2,14 @@ Bundler.require :cassandra
 
 CassandraObject::Base.config = {
   keyspace: 'cassandra_object_test',
-  servers: '127.0.0.1:9160',
-  thrift: {
-    timeout: 5
-  }
+  hosts: '127.0.0.1',
+  compression: :lz4,
+  connect_timeout: 0.1,
+  request_timeout: 0.1,
+  consistency: :all,
+  protocol_version: 3,
+  trace: true
+  #logger: Logger.new($stderr)
 }
 
 begin

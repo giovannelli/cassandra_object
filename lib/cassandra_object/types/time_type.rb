@@ -7,7 +7,7 @@ module CassandraObject
       end
 
       def decode(str)
-        Time.parse(str).utc if str
+        Time.parse(str).utc.in_time_zone if str
       rescue
 
       end

@@ -7,43 +7,47 @@ module CassandraObject
     include Batches, FinderMethods, QueryMethods
 
     attr_accessor :klass
-    attr_accessor :limit_value, :select_values, :where_values, :id_values
+    attr_accessor :limit_value, :select_values, :id_values
 
     def initialize(klass)
       @klass = klass
 
-      @limit_value    = nil
-      @select_values  = []
-      @where_values   = []
-      @id_values      = []
+      @limit_value = nil
+      @select_values = []
+      @id_values = []
     end
 
     private
 
-      def scoping
-        previous, klass.current_scope = klass.current_scope, self
-        yield
-      ensure
-        klass.current_scope = previous
+    def scoping
+      previous, klass.current_scope = klass.current_scope, self
+      yield
+    ensure
+      klass.current_scope = previous
+    end
+
+    def method_missing(method_name, *args, &block)
+      if klass.respond_to?(method_name)
+        scoping { klass.send(method_name, *args, &block) }
+      elsif Array.method_defined?(method_name)
+        to_a.send(method_name, *args, &block)
+      else
+        super
+      end
+    end
+
+    def select_records
+      results = []
+      records = {}
+      klass.adapter.select(self) do |key, attributes|
+        records[key] = attributes
       end
 
-      def method_missing(method_name, *args, &block)
-        if klass.respond_to?(method_name)
-          scoping { klass.send(method_name, *args, &block) }
-        elsif Array.method_defined?(method_name)
-          to_a.send(method_name, *args, &block)
-        else
-          super
-        end
+      records.each do |key, attributes|
+        results << klass.instantiate(key, attributes)
       end
 
-      def select_records
-        results = []
-        klass.adapter.select(self) do |key, attributes|
-          results << klass.instantiate(key, attributes)
-        end
-        results.compact!
-        results
-      end
+      return results
+    end
   end
 end

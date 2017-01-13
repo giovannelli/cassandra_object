@@ -37,13 +37,7 @@ module CassandraObject
         @batch_statements = nil
       end
 
-      def execute_batchable(statement)
-        if @batch_statements
-          @batch_statements << statement
-        else
-          execute statement
-        end
-      end
     end
+
   end
 end
