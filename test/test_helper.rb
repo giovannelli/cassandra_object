@@ -7,12 +7,12 @@ require 'mocha/setup'
 require 'support/cassandra'
 require 'support/issue'
 
-def MiniTest.filter_backtrace(bt)
-  bt
-end
+#"ccm create -n 1 -v 2.1.2 -i 127.0.0. -s -b test-cluster"
+puts "=========================================== CIAO ==================================================================="
 
 module CassandraObject
   class TestCase < ActiveSupport::TestCase
+
     def temp_object(&block)
       Class.new(CassandraObject::Base) do
         self.column_family = 'Issues'

@@ -29,12 +29,6 @@ class Widget < CassandraObject::Base
 end
 ```
 ## Using with Cassandra
-
-Add the cassandra-cql gem to Gemfile:
-
-```ruby
-gem 'cassandra-cql'
-```
   
 Add a config/cassandra.yml:
 
@@ -42,26 +36,9 @@ Add a config/cassandra.yml:
 development:
   adapter: cassandra
   keyspace: my_app_development
-  servers: ["127.0.0.1:9160"]
-  thrift:
-    timeout: 20
-    retries: 2
+  hosts: ["127.0.0.1"]
 ```
 
-## Using with Postgres HStore
-
-Add the pg gem to your Gemfile:
-
-```ruby
-gem 'pg'
-```
-  
-And a config/cassandra.yml:
-
-```yaml
-development:
-  adapter: hstore
-```
 
 ## Creating and updating records
 

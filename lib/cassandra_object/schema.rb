@@ -2,7 +2,6 @@ require 'cassandra'
 
 module CassandraObject
   class Schema
-    extend Tasks
 
     class << self
       DEFAULT_CREATE_KEYSPACE = {
