@@ -39,8 +39,9 @@ module CassandraObject
     def select_records
       results = []
       records = {}
+
       klass.adapter.select(self) do |key, attributes|
-        records[key] = attributes
+        records[key] = (records[key]||{}).merge(attributes)
       end
 
       records.each do |key, attributes|

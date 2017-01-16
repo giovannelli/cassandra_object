@@ -1,13 +1,13 @@
 require 'test_helper'
 
 class CassandraObject::SchemaTest < CassandraObject::TestCase
+
   test "create_keyspace" do
     CassandraObject::Schema.create_keyspace 'Blah'
-
-    existing_keyspace = false
     begin
+      existing_keyspace = false
       CassandraObject::Schema.create_keyspace 'Blah'
-    rescue Exception => e
+    rescue Exception
       existing_keyspace = true
     ensure
       CassandraObject::Schema.drop_keyspace 'Blah'
@@ -16,14 +16,13 @@ class CassandraObject::SchemaTest < CassandraObject::TestCase
     assert existing_keyspace
   end
 
-  # SELECT columnfamily_name FROM System.schema_columnfamilies WHERE keyspace_name='myKeyspaceName';
   test "create_table" do
     CassandraObject::Schema.create_table 'TestRecords', 'compression_parameters:sstable_compression' => 'SnappyCompressor'
 
     begin
       CassandraObject::Schema.create_table 'TestRecords'
       assert false, 'TestRecords should already exist'
-    rescue Exception => e
+    rescue Exception
     end
   end
 
@@ -35,7 +34,7 @@ class CassandraObject::SchemaTest < CassandraObject::TestCase
     begin
       CassandraObject::Schema.drop_table 'TestCFToDrop'
       assert false, 'TestCFToDrop should not exist'
-    rescue Exception => e
+    rescue Exception
     end
   end
 

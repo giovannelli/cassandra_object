@@ -1,7 +1,7 @@
 require 'test_helper'
-require "cassandra_object/railties/controller_runtime"
+require 'cassandra_object/railties/controller_runtime'
 
-class CassandraObject::Railties::ControllerRuntimeTest < MiniTest::Unit::TestCase
+class CassandraObject::Railties::ControllerRuntimeTest < MiniTest::Test
   class TestRuntime
     def self.log_process_action(payload)
       ['sweet']

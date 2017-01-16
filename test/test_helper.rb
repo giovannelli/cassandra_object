@@ -7,9 +7,6 @@ require 'mocha/setup'
 require 'support/cassandra'
 require 'support/issue'
 
-#"ccm create -n 1 -v 2.1.2 -i 127.0.0. -s -b test-cluster"
-puts "=========================================== CIAO ==================================================================="
-
 module CassandraObject
   class TestCase < ActiveSupport::TestCase
 

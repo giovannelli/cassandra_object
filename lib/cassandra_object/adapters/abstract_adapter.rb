@@ -36,7 +36,6 @@ module CassandraObject
       ensure
         @batch_statements = nil
       end
-
     end
 
   end

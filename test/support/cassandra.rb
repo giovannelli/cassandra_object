@@ -15,6 +15,7 @@ CassandraObject::Base.config = {
 begin
   CassandraObject::Schema.drop_keyspace 'cassandra_object_test'
 rescue Exception => e
+  puts "==============#{e}"
 end
 
 sleep 1

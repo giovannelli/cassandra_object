@@ -19,8 +19,8 @@ class CassandraObject::InspectTest < CassandraObject::TestCase
       integer :price
     end.new(description: "yeah buddy", price: nil)
 
-    assert_match /id/, object.inspect
-    assert_match /description/, object.inspect
-    assert_no_match /price/, object.inspect
+    assert_match(/id/, object.inspect)
+    assert_match(/description/, object.inspect)
+    assert_no_match(/price/, object.inspect)
   end
 end

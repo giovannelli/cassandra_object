@@ -6,6 +6,7 @@ module CassandraObject
       delegate :options, to: :reflection
 
       def initialize(owner, reflection)
+        @loaded = false
         @owner = owner
         @reflection = reflection
       end

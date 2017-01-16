@@ -2,7 +2,7 @@ require 'test_helper'
 
 class CassandraObject::Types::BaseTypeTest < CassandraObject::Types::TestCase
   test 'default' do
-    assert_equal nil, coder.default
+    assert_nil coder.default
     assert_equal '5', CassandraObject::Types::BaseType.new(default: '5').default
     assert_equal 5.object_id, CassandraObject::Types::BaseType.new(default: 5).default.object_id
   end

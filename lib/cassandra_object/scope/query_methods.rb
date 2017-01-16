@@ -1,6 +1,7 @@
 module CassandraObject
   class Scope
     module QueryMethods
+
       def select!(*values)
         self.select_values += values.flatten
         self
@@ -10,7 +11,7 @@ module CassandraObject
         if block_given?
           to_a.select(&block)
         else
-          clone.select! *values
+          clone.select!(*values)
         end
       end
 
@@ -44,6 +45,7 @@ module CassandraObject
       def to_a
         select_records
       end
+
     end
   end
 end
