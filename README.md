@@ -1,5 +1,5 @@
 # Cassandra Object
-[![Build Status](https://secure.travis-ci.org/giovannelli/cassandra_object.png)](http://travis-ci.org/giovannelli/cassandra_object) [![Code Climate](https://codeclimate.com/github/giovannelli/cassandra_object.png)](https://codeclimate.com/github/data-axle/cassandra_object)
+[![Build Status](https://secure.travis-ci.org/giovannelli/cassandra_object.png)](http://travis-ci.org/giovannelli/cassandra_object)
 
 Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord.
 
