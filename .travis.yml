@@ -1,9 +1,17 @@
 language: ruby
 rvm:
   - 2.3.3
-env: CQLSH=/usr/local/cassandra/bin/cqlsh
+
+env:
+  - CASSANDRA_VERSION=2.1.2
+
 before_install:
-  - wget http://archive.apache.org/dist/cassandra/1.2.9/apache-cassandra-1.2.9-bin.tar.gz
-  - tar xfz apache-cassandra-1.2.9-bin.tar.gz
-  - sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Xss256k -Djava.net.preferIPv4Stack=false\"' >> apache-cassandra-1.2.9/conf/cassandra-env.sh"
-  - cd apache-cassandra-1.2.9 && sudo ./bin/cassandra 2>&1 >> cassandra.log &
+  - sudo apt-get install libjna-java
+  - sudo apt-get install python-support
+  - sudo easy_install pyYaml
+  - sudo easy_install pip
+  - sudo pip install ccm
+
+install:
+  - ccm create -n 1 -v $CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
+  - ccm start
