@@ -1,4 +1,3 @@
-require 'cassandra_object/scope/batches'
 require 'cassandra_object/scope/finder_methods'
 require 'cassandra_object/scope/query_methods'
 

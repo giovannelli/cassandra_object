@@ -43,6 +43,6 @@ class CassandraObject::Railties::ControllerRuntimeTest < MiniTest::Test
     messages = CassandraRuntime.log_process_action(payload)
 
     assert_equal 2, messages.size
-    assert_equal "CassandraObject: 12.3ms", messages.last
+    assert_equal 'CassandraObject: 12.3ms', messages.last
   end
 end
