@@ -14,6 +14,6 @@ before_install:
   - sudo pip install ccm
 
 install:
-  - ccm create -n 1 -v $CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
+  - ccm create -n 1 -v source:$CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
   - ccm start
   - bundle install
