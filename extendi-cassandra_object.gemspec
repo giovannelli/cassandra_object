@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = 'gotime-cassandra_object'
-  s.version = '5.0.0'
+  s.name = 'extendi-cassandra_object'
+  s.version = '1.0.0'
   s.description = 'Cassandra ActiveModel'
   s.summary = 'Cassandra ActiveModel'
   s.authors = ['Duccio Giovannelli', 'gotime']

@@ -96,11 +96,6 @@ module CassandraObject
       end
 
       def execute(statement, arguments = [])
-        # puts "===== execute ======= "
-        # puts statement
-        # puts arguments.inspect
-        # puts arguments.class
-        # puts "===== execute ======= "
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           connection.execute statement, arguments: arguments, consistency: consistency
         end

@@ -9,7 +9,7 @@ Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord.
 
 Add the following to your Gemfile:
 ```ruby
-gem 'gotime-cassandra_object'
+gem 'extendi-cassandra_object'
 ```
 
 Change the version of Cassandra accordingly. Recent versions have not been backward compatible.
@@ -39,6 +39,12 @@ development:
   adapter: cassandra
   keyspace: my_app_development
   hosts: ["127.0.0.1"]
+  compression: :lz4,
+  connect_timeout: 0.1,
+  request_timeout: 0.1,
+  consistency: :all,
+  protocol_version: 3,
+  trace: true/false
 ```
 
 
