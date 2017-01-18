@@ -23,7 +23,7 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     second_issue = Issue.create
 
     assert_equal [], Issue.find([])
-    assert_equal [first_issue, second_issue], Issue.find([first_issue.id, second_issue.id])
+    assert_equal [first_issue, second_issue].to_set, Issue.find([first_issue.id, second_issue.id]).to_set
   end
 
   test 'find_by_id' do
