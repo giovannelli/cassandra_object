@@ -15,13 +15,13 @@ CassandraObject::Base.config = {
 begin
   CassandraObject::Schema.drop_keyspace 'cassandra_object_test'
 rescue Exception => e
-  puts "==============#{e}"
+  puts e.message
 end
 
 sleep 1
 CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schema.create_column_family 'Issues'
-CassandraObject::Base.adapter.consistency = 'QUORUM'
+CassandraObject::Base.adapter.consistency = :quorum
 
 CassandraObject::Base.class_eval do
   class_attribute :created_records

@@ -61,10 +61,6 @@ module CassandraObject
 
       private
 
-      def quote_columns(column_names)
-        column_names.map { |name| "'#{name}'" }
-      end
-
       def typecast_persisted_attributes(object, attributes)
         attributes.each do |key, value|
           if definition = attribute_definitions[key.to_s]

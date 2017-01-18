@@ -3,7 +3,7 @@ require 'cassandra_object/scope/query_methods'
 
 module CassandraObject
   class Scope
-    include Batches, FinderMethods, QueryMethods
+    include FinderMethods, QueryMethods
 
     attr_accessor :klass
     attr_accessor :limit_value, :select_values, :id_values

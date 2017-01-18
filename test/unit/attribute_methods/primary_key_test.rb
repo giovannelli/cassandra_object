@@ -4,7 +4,7 @@ class CassandraObject::AttributeMethods::PrimaryKeyTest < CassandraObject::TestC
   test 'get id' do
     model = temp_object do
       key do
-        "foo"
+        'foo'
       end
     end
     record = model.new

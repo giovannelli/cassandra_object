@@ -25,8 +25,8 @@ module CassandraObject
           wheres << @adapter.create_ids_where_clause(@scope.id_values)
           wheres.flatten!
           conditions = wheres
-          conditions += @scope.select_values.map{|sv| 'column1 = ?'}
-          return  conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
+          conditions += @scope.select_values.map { |sv| 'column1 = ?' }
+          return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end
 
         def limit_string
@@ -65,6 +65,8 @@ module CassandraObject
             :protocol_version,
             :logger
         ])
+
+
         {
             load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
             reconnection_policy: 'Cassandra::Reconnection::Policies::%s',
@@ -74,7 +76,14 @@ module CassandraObject
             cluster_options[policy_key] = (class_template % [policy_key.classify]).constantize
           end
         end
-        cluster_options.merge!({ max_schema_agreement_wait: 1 })
+
+        # Setting defaults
+        cluster_options.merge!({
+                                   max_schema_agreement_wait: 1,
+                                   consistency: cluster_options[:consistency]||:quorum,
+                                   protocol_version: cluster_options[:protocol_version]||3,
+
+                               })
         return cluster_options
       end
 
@@ -93,7 +102,7 @@ module CassandraObject
         # puts arguments.class
         # puts "===== execute ======= "
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
-          connection.execute statement, arguments: arguments
+          connection.execute statement, arguments: arguments, consistency: consistency
         end
       end
 
@@ -103,7 +112,7 @@ module CassandraObject
         # TODO FIX ON RUBY-DRIVER
         if scope.id_values.size > 1
           arguments = nil
-          statement = qb.to_query.gsub('?', scope.id_values.map{|id| "'#{id}'"}.join(',') )
+          statement = qb.to_query.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
         else
           arguments = scope.id_values + scope.select_values.map(&:to_s)
           statement = qb.to_query
@@ -128,31 +137,26 @@ module CassandraObject
       def write(table, id, attributes)
         queries = []
 
-          if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
-            not_nil_attributes.each do |column, value|
-              queries << "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES ('#{id}','#{column}','#{value}')"
-            end
+        if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
+          not_nil_attributes.each do |column, value|
+            queries << "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES ('#{id}','#{column}','#{value}')"
           end
+        end
 
-          if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
-            nil_attributes.each do |column, value|
-              queries <<  "DELETE value FROM #{table} WHERE #{primary_key_column} = '#{id}' AND column1='#{column}'"
-            end
+        if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
+          nil_attributes.each do |column, value|
+            queries << "DELETE value FROM #{table} WHERE #{primary_key_column} = '#{id}' AND column1='#{column}'"
           end
+        end
 
         execute_batchable(queries)
       end
 
       def delete(table, ids)
         ids = [ids] if !ids.is_a?(Array)
-          arguments = nil
-          statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}".gsub('?', ids.map{|id| "'#{id}'"}.join(',') )
-
-        # puts "================DELETE=================="
-        # puts "arguments: #{arguments}"
-        # puts "statement: #{statement}"
-
-        connection.execute statement, arguments
+        arguments = nil
+        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}".gsub('?', ids.map { |id| "'#{id}'" }.join(','))
+        connection.execute statement, arguments: arguments, consistency: consistency
       end
 
       def execute_batch(statements)
@@ -169,11 +173,11 @@ module CassandraObject
       def create_table(table_name, options = {})
         stmt = "CREATE TABLE #{table_name} (" +
             'key text,' +
-            'column1 text,'  +
-            'value text,'  +
+            'column1 text,' +
+            'value text,' +
             'PRIMARY KEY (key, column1)' +
-            ') WITH COMPACT STORAGE'
-
+            ')'
+        # WITH COMPACT STORAGE
         schema_execute stmt, config[:keyspace]
       end
 
@@ -185,13 +189,13 @@ module CassandraObject
         schema_db = Cassandra.cluster cassandra_cluster_options
         connection = schema_db.connect keyspace
         #puts cql.inspect
-        connection.execute cql
+        connection.execute cql, consistency: consistency
       end
 
       # /SCHEMA
 
       def consistency
-        @consistency
+        defined?(@consistency) ? @consistency : nil
       end
 
       def consistency=(val)
@@ -215,20 +219,6 @@ module CassandraObject
         ids = ids.first if ids.is_a?(Array) && ids.one?
         sql = ids.is_a?(Array) ? "#{primary_key_column} IN (?)" : "#{primary_key_column} = ?"
         return sql
-      end
-
-      private
-
-      def quote_columns(column_names)
-        column_names.map { |name| "'#{name}'" }
-      end
-
-      def execute_batchable(statements)
-        if defined?(@batch_statements) && @batch_statements
-          @batch_statements += statements
-        else
-          execute_batch(statements)
-        end
       end
 
     end

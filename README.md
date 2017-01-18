@@ -3,6 +3,8 @@
 
 Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord.
 
+[:any, :one, :two, :three, :quorum, :all, :local_quorum, :each_quorum, :serial, :local_serial, :local_one]
+
 ## Installation
 
 Add the following to your Gemfile:

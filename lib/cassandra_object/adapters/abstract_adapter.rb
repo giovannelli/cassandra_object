@@ -36,6 +36,14 @@ module CassandraObject
       ensure
         @batch_statements = nil
       end
+
+      def execute_batchable(statements)
+        if defined?(@batch_statements) && @batch_statements
+          @batch_statements += statements
+        else
+          execute_batch(statements)
+        end
+      end
     end
 
   end

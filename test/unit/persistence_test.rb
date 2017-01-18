@@ -29,7 +29,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     )
   end
 
-  test "batch" do
+  test 'batch' do
     first_issue = second_issue = nil
 
     Issue.batch do
@@ -172,11 +172,6 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
       issue.text = nil
       issue.save!
     end
-  end
-
-  test 'quote_columns' do
-    klass = Class.new { include CassandraObject::Persistence }
-    assert_equal %w{'a' 'b'}, klass.__send__(:quote_columns, %w{a b})
   end
 
   test 'remove' do
