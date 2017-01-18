@@ -4,6 +4,7 @@ Bundler.require(:default, :test)
 require 'rails/test_help'
 require 'mocha/setup'
 
+require 'cassandra_object'
 require 'support/cassandra'
 require 'support/issue'
 
