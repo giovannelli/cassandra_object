@@ -6,6 +6,7 @@ module CassandraObject
       singleton_class.class_eval do
         delegate :find, :find_by_id, :first, :all, to: :scope
         delegate :select, :where, :where_ids, to: :scope
+        delegate :cql_response , to: :scope
       end
     end
 

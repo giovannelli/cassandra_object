@@ -31,6 +31,10 @@ module CassandraObject
       id
     end
 
+    def get_cql_response
+      self.class.cql_response.find(self.id)
+    end
+
     def hash
       id.hash
     end

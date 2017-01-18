@@ -6,12 +6,13 @@ module CassandraObject
     include FinderMethods, QueryMethods
 
     attr_accessor :klass
-    attr_accessor :limit_value, :select_values, :id_values
+    attr_accessor :limit_value, :select_values, :id_values, :raw_response
 
     def initialize(klass)
       @klass = klass
 
       @limit_value = nil
+      @raw_response = nil
       @select_values = []
       @id_values = []
     end
@@ -24,6 +25,7 @@ module CassandraObject
     ensure
       klass.current_scope = previous
     end
+
 
     def method_missing(method_name, *args, &block)
       if klass.respond_to?(method_name)
@@ -44,10 +46,14 @@ module CassandraObject
       end
 
       records.each do |key, attributes|
-        results << klass.instantiate(key, attributes)
+        if self.raw_response
+          results << { key => attributes }
+        else
+          results << klass.instantiate(key, attributes)
+        end
       end
-
       return results
     end
+
   end
 end

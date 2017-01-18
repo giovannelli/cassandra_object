@@ -37,7 +37,6 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
   test 'all' do
     first_issue = Issue.create
     second_issue = Issue.create
-
     assert_equal [first_issue, second_issue].to_set, Issue.all.to_set
   end
 
@@ -47,4 +46,33 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
 
     assert [first_issue, second_issue].include?(Issue.first)
   end
+
+  test 'cql response: find with ids' do
+    first_issue = Issue.create
+    second_issue = Issue.create
+
+    assert_equal [], Issue.find([])
+    assert_equal [first_issue.get_cql_response, second_issue.get_cql_response].to_set, Issue.cql_response.find([first_issue.id, second_issue.id]).to_set
+  end
+
+  test 'cql response: find_by_id' do
+    Issue.create.tap do |issue|
+      assert_equal issue.get_cql_response, Issue.cql_response.find_by_id(issue.id)
+    end
+
+    assert_nil Issue.find_by_id('what')
+  end
+
+  test 'cql response: all' do
+    first_issue = Issue.create
+    second_issue = Issue.create
+    assert_equal [first_issue.get_cql_response, second_issue.get_cql_response].to_set, Issue.cql_response.all.to_set
+  end
+
+  test 'cql response: first' do
+    first_issue = Issue.create
+    second_issue = Issue.create
+    assert [first_issue.id, second_issue.id].include?(Issue.cql_response.first.keys.first)
+  end
+
 end

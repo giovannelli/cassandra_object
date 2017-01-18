@@ -2,6 +2,12 @@ module CassandraObject
   class Scope
     module QueryMethods
 
+      def cql_response
+        cloned = self.clone
+        cloned.raw_response = true
+        cloned
+      end
+
       def select!(*values)
         self.select_values += values.flatten
         self

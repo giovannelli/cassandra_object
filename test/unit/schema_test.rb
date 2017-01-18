@@ -24,7 +24,7 @@ class CassandraObject::SchemaTest < CassandraObject::TestCase
       CassandraObject::Schema.create_table 'TestRecords'
       assert false, 'TestRecords should already exist'
     rescue Exception => e
-      assert_equal e.message, 'Cannot add already existing column family "testrecords" to keyspace "cassandra_object_test"'
+      assert_equal e.message.gsub('column family', 'table'), 'Cannot add already existing table "testrecords" to keyspace "cassandra_object_test"'
     end
   end
 
@@ -37,7 +37,7 @@ class CassandraObject::SchemaTest < CassandraObject::TestCase
       CassandraObject::Schema.drop_table 'TestCFToDrop'
       assert false, 'TestCFToDrop should not exist'
     rescue Exception => e
-      assert_equal e.message, 'unconfigured columnfamily testcftodrop'
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testcftodrop'
     end
   end
 
