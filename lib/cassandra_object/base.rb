@@ -30,4 +30,4 @@ module CassandraObject
   end
 end
 
-#ActiveSupport.run_load_hooks(:cassandra_object, CassandraObject::Base)
+ActiveSupport.run_load_hooks(:cassandra_object, CassandraObject::Base)
