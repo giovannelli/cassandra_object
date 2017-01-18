@@ -3,9 +3,8 @@ rvm:
   - 2.3.3
 
 env:
-  - CASSANDRA_VERSION=2.1.11
   - CASSANDRA_VERSION=2.1.2
-
+  - CASSANDRA_VERSION=3.9
 before_install:
   - sudo apt-get install libjna-java
   - sudo apt-get install python-support
@@ -14,6 +13,6 @@ before_install:
   - sudo pip install ccm
 
 install:
-  - ccm create -n 1 -v source:$CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
+  - ccm create -n 1 -v $CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
   - ccm start
   - bundle install
