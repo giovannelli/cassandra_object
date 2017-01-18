@@ -22,8 +22,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency('lz4-ruby', '>= 0.3.3')
 
   s.platform = Gem::Platform::RUBY
-  s.extensions = 'ext/cassandra_murmur3/extconf.rb'
-  s.files << 'ext/cassandra_murmur3/cassandra_murmur3.c'
-
   s.add_development_dependency('bundler')
 end
