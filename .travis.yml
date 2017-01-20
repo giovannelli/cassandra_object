@@ -19,3 +19,7 @@ install:
   - ccm create -n 1 -v $CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
   - ccm start
   - bundle install
+
+addons:
+  code_climate:
+    repo_token: 26f0cacdb10ba97b60694f2b1ad6e45e9ea723d20fcc8ed4ae9cc415952ba934
