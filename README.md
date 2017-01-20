@@ -4,6 +4,8 @@
 Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord. 
 Use cql3 provided by ruby-driver gem and uses the old thrift structure:
 
+```shell
+
 CREATE TABLE keyspace.table (
     key text,
     column1 text,
@@ -24,6 +26,7 @@ CREATE TABLE keyspace.table (
     AND min_index_interval = 128
     AND read_repair_chance = 1.0
     AND speculative_retry = 'NONE';
+```
 
 ## Installation
 
