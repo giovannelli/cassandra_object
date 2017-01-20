@@ -8,6 +8,12 @@ module CassandraObject
         cloned
       end
 
+      def columns
+        cloned = self.clone
+        cloned.select_values = [:column1]
+        cloned.cql_response
+      end
+
       def select!(*values)
         self.select_values += values.flatten
         self
@@ -40,7 +46,7 @@ module CassandraObject
       end
 
       def limit!(value)
-        self.limit_value = value
+        self.limit_value = value * (self.name.constantize.attribute_definitions.size)
         self
       end
 

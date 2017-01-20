@@ -47,7 +47,7 @@ module CassandraObject
 
       records.each do |key, attributes|
         if self.raw_response
-          results << { key => attributes }
+          results << { key => attributes.values.compact.empty? ? attributes.keys.map(&:to_sym) : attributes.symbolize_keys }
         else
           results << klass.instantiate(key, attributes)
         end

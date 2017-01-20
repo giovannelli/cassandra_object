@@ -14,10 +14,20 @@ module CassandraObject
 
         def to_query
           [
-              "SELECT * FROM #{@scope.klass.column_family}",
+              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
               where_string,
-              limit_string
+              limit_string,
+              "ALLOW FILTERING"
           ].delete_if(&:blank?) * ' '
+        end
+
+        def select_string
+          selected_values = @scope.select_values.select{ |sv| sv == :column1 || sv == :values }
+          if selected_values.any?
+            (['KEY'] | selected_values) * ','
+          else
+            '*'
+          end
         end
 
         def where_string
@@ -25,7 +35,7 @@ module CassandraObject
           wheres << @adapter.create_ids_where_clause(@scope.id_values)
           wheres.flatten!
           conditions = wheres
-          conditions += @scope.select_values.map { |sv| 'column1 = ?' }
+          conditions += @scope.select_values.select{ |sv| sv != :column1 }.map{ |sv| 'column1 = ?' }
           return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end
 
@@ -109,7 +119,7 @@ module CassandraObject
           arguments = nil
           statement = qb.to_query.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
         else
-          arguments = scope.id_values + scope.select_values.map(&:to_s)
+          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
           statement = qb.to_query
         end
         execute(statement, arguments).each do |cql_row|

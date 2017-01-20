@@ -1,9 +1,29 @@
 # Cassandra Object
 [![Build Status](https://secure.travis-ci.org/giovannelli/cassandra_object.png)](http://travis-ci.org/giovannelli/cassandra_object)
 
-Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord.
+Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord. 
+Use cql3 provided by ruby-driver gem and uses the old thrift structure:
 
-[:any, :one, :two, :three, :quorum, :all, :local_quorum, :each_quorum, :serial, :local_serial, :local_one]
+CREATE TABLE keyspace.table (
+    key text,
+    column1 text,
+    value blob,
+    PRIMARY KEY (key, column1)
+) WITH COMPACT STORAGE
+    AND CLUSTERING ORDER BY (column1 ASC)
+    AND bloom_filter_fp_chance = 0.001
+    AND caching = '{"keys":"ALL", "rows_per_partition":"NONE"}'
+    AND comment = ''
+    AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+    AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND dclocal_read_repair_chance = 0.0
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 1.0
+    AND speculative_retry = 'NONE';
 
 ## Installation
 
@@ -42,11 +62,10 @@ development:
   compression: :lz4,
   connect_timeout: 0.1,
   request_timeout: 0.1,
-  consistency: :all,
+  consistency: :any/:one/:two/:three/:quorum/:all/:local_quorum/:each_quorum/:serial/:local_serial/:local_one,
   protocol_version: 3,
   trace: true/false
 ```
-
 
 ## Creating and updating records
 
@@ -67,10 +86,10 @@ widget.save!
 ## Finding records
 
 ```ruby
-widget = Widget.find(uuid)
-widget = Widget.first
-widgets = Widget.all
-Widget.find_each do |widget|
+  widget = Widget.find(uuid)
+  widget = Widget.first
+  widgets = Widget.all
+  Widget.find_each do |widget|
   # Codez
 end
 ```
@@ -79,7 +98,17 @@ end
 
 Some lightweight scoping features are available:
 ```ruby
-  Widget.where('color' => 'red')
-  Widget.select(['name', 'color'])
+  Widget.where(color: :red)
+  Widget.select([:name, :color])
   Widget.limit(10)
+```
+
+## Plain response scoping
+
+cql_response return an hash where the key is the model key and values is an hash where key is the column name and the value is the column value.
+
+```ruby
+  Widget.cql_response.where(color: :red)
+  Widget.cql_response([:name, :color])
+  Widget.cql_response.limit(10)
 ```

@@ -16,11 +16,11 @@ module CassandraObject
       end
 
       def all
-        to_a
+         to_a
       end
 
       def first
-        to_a.first
+        limit(1).to_a.first
       end
 
       private
