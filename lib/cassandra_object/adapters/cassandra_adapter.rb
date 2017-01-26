@@ -139,12 +139,14 @@ module CassandraObject
         write(table, id, attributes)
       end
 
-      def write(table, id, attributes)
+      def write(table, id, attributes, ttl = nil)
         queries = []
 
         if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
           not_nil_attributes.each do |column, value|
-            queries << "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES ('#{id}','#{column}','#{value}')"
+            query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES ('#{id}','#{column}','#{value}')"
+            query << " USING TTL #{ttl}" if ttl.present?
+            queries << query
           end
         end
 
