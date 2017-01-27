@@ -146,9 +146,8 @@ module CassandraObject
           if value.present?
             is_ttl = ttl.present?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
-            query += ' USING TTL ?' if is_ttl
+            query += " USING TTL #{ttl}" if is_ttl
             args = [id.to_s, column.to_s, value.to_s]
-            args << ttl if is_ttl
 
             queries << {query: query, arguments: args}
           end
