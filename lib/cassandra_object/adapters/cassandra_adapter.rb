@@ -142,20 +142,18 @@ module CassandraObject
       def write(table, id, attributes, ttl = nil)
         queries = []
 
-        if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
-          not_nil_attributes.each do |column, value|
-            query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES ('#{id}','#{column}','#{value}')"
-            query << " USING TTL #{ttl}" if ttl.present?
-            queries << query
-          end
-        end
+        attributes.each do |column, value|
+          if value.present?
+            is_ttl = ttl.present?
+            query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
+            query += ' USING TTL ?' if is_ttl
+            args = [id, column, value]
+            args << ttl if is_ttl
 
-        if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
-          nil_attributes.each do |column, value|
-            queries << "DELETE value FROM #{table} WHERE #{primary_key_column} = '#{id}' AND column1='#{column}'"
+            queries << {query: query, arguments: args}
           end
+          queries << {query: "DELETE value FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id, column]} if value.nil?
         end
-
         execute_batchable(queries)
       end
 
@@ -170,7 +168,7 @@ module CassandraObject
         raise 'No can do' if statements.empty?
         batch = connection.batch do |b|
           statements.each do |statement|
-            b.add(statement)
+            b.add(statement[:query], arguments: statement[:arguments])
           end
         end
         connection.execute(batch)
