@@ -147,12 +147,12 @@ module CassandraObject
             is_ttl = ttl.present?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
             query += ' USING TTL ?' if is_ttl
-            args = [id, column, value]
+            args = [id.to_s, column.to_s, value.to_s]
             args << ttl if is_ttl
 
             queries << {query: query, arguments: args}
           end
-          queries << {query: "DELETE value FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id, column]} if value.nil?
+          queries << {query: "DELETE value FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
         end
         execute_batchable(queries)
       end
