@@ -44,13 +44,23 @@ module CassandraObject
       q = klass.adapter.select(self) do |key, attributes|
         records[key] = (records[key]||{}).merge(attributes)
       end
-
       # pagination
-
+      # loop do
+      #   puts "last page? #{q.last_page?}"
+      #   puts "page size: #{q.size}"
+      #
+      #   q.each do |row|
+      #     puts row
+      #   end
+      #   puts ""
+      #
+      #   break if q.last_page?
+      #   q = q.next_page
+      # end
 
       records.each do |key, attributes|
         if self.raw_response
-          results << { key => attributes.values.compact.empty? ? attributes.keys.map : attributes.symbolize_keys }
+          results << { key => attributes.values.compact.empty? ? attributes.keys : attributes }
         else
           results << klass.instantiate(key, attributes)
         end
