@@ -16,7 +16,6 @@ module CassandraObject
           [
               "SELECT #{select_string} FROM #{@scope.klass.column_family}",
               where_string,
-              limit_string,
               "ALLOW FILTERING"
           ].delete_if(&:blank?) * ' '
         end
@@ -39,9 +38,6 @@ module CassandraObject
           return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end
 
-        def limit_string
-          @scope.limit_value ? "LIMIT #{@scope.limit_value}" : ''
-        end
       end
 
       def primary_key_column
@@ -92,7 +88,7 @@ module CassandraObject
                                    max_schema_agreement_wait: 1,
                                    consistency: cluster_options[:consistency]||:quorum,
                                    protocol_version: cluster_options[:protocol_version]||3,
-
+                                   page_size: cluster_options[:page_size] || 10000
                                })
         return cluster_options
       end
@@ -107,7 +103,7 @@ module CassandraObject
 
       def execute(statement, arguments = [])
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
-          connection.execute statement, arguments: arguments, consistency: consistency
+          connection.execute statement, arguments: arguments, consistency: consistency, page_size: config[:page_size]
         end
       end
 
@@ -170,7 +166,7 @@ module CassandraObject
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch)
+        connection.execute(batch, page_size: config[:page_size])
       end
 
       # SCHEMA

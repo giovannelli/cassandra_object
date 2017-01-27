@@ -8,6 +8,7 @@ CassandraObject::Base.config = {
   request_timeout: 0.1,
   consistency: :all,
   protocol_version: 3,
+  page_size: 10000,
   trace: true
   #logger: Logger.new($stderr)
 }

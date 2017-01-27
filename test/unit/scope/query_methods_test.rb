@@ -26,7 +26,7 @@ class CassandraObject::Scope::QueryMethodsTest < CassandraObject::TestCase
   test 'only column names' do
     Issue.create title: 'foo', description: 'bar'
     foo_issue_columns =  Issue.columns.first
-    assert_equal [:created_at, :description, :title, :updated_at], foo_issue_columns[foo_issue_columns.keys.first]
+    assert_equal ['created_at', 'description', 'title', 'updated_at'], foo_issue_columns[foo_issue_columns.keys.first].to_a
   end
 
 end

@@ -41,13 +41,16 @@ module CassandraObject
       results = []
       records = {}
 
-      klass.adapter.select(self) do |key, attributes|
+      q = klass.adapter.select(self) do |key, attributes|
         records[key] = (records[key]||{}).merge(attributes)
       end
 
+      # pagination
+
+
       records.each do |key, attributes|
         if self.raw_response
-          results << { key => attributes.values.compact.empty? ? attributes.keys.map(&:to_sym) : attributes.symbolize_keys }
+          results << { key => attributes.values.compact.empty? ? attributes.keys.map : attributes.symbolize_keys }
         else
           results << klass.instantiate(key, attributes)
         end
