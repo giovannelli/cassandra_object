@@ -46,7 +46,7 @@ module CassandraObject
       end
 
       def limit!(value)
-        self.limit_value = value * (self.name.constantize.attribute_definitions.size)
+        self.limit_value = value * (self.name.constantize.attribute_definitions.size) if raw_response
         self
       end
 
