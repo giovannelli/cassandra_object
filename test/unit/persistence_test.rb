@@ -210,10 +210,10 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
 
   test 'paged_request' do
 
-    NUMTEST = 1000
+    NUMTEST = 21000
 
     issues = []
-    (0...NUMTEST).each do
+    NUMTEST.times.each do |i|
       issue = Issue.new
       issue.save
       issues << issue
