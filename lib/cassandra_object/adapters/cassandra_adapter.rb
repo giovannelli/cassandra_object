@@ -118,13 +118,7 @@ module CassandraObject
           arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
           statement = qb.to_query
         end
-        execute(statement, arguments).each do |cql_row|
-          h = Hash.new
-          attributes = cql_row.to_hash
-          key = attributes.delete(primary_key_column)
-          h[attributes.values[0]] = attributes.values[1]
-          yield(key, h) unless h.empty?
-        end
+        execute(statement, arguments)
       end
 
       def insert(table, id, attributes)

@@ -41,23 +41,21 @@ module CassandraObject
       results = []
       records = {}
 
-      q = klass.adapter.select(self) do |key, attributes|
-        records[key] = (records[key]||{}).merge(attributes)
-      end
+      page = klass.adapter.select(self)
       # pagination
-      # loop do
-      #   puts "last page? #{q.last_page?}"
-      #   puts "page size: #{q.size}"
-      #
-      #   q.each do |row|
-      #     puts row
-      #   end
-      #   puts ""
-      #
-      #   break if q.last_page?
-      #   q = q.next_page
-      # end
-
+      loop do
+        page.rows.each do |cql_row|
+          h = Hash.new
+          attributes = cql_row.to_hash
+          key = attributes.delete(klass.adapter.primary_key_column)
+          h[attributes.values[0]] = attributes.values[1]
+          records[key] = (records[key]||{}).merge(h)
+        end
+        break if page.last_page?
+        page = page.next_page
+      end
+      # limit
+      records.first(@limit_value) if @limit_value.present?
       records.each do |key, attributes|
         if self.raw_response
           results << { key => attributes.values.compact.empty? ? attributes.keys : attributes }

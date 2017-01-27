@@ -9,6 +9,7 @@ group :test do
   gem 'mocha', require: false
   gem 'snappy'
   gem 'lz4-ruby'
+  gem 'byebug'
 end
 
 group :cassandra do

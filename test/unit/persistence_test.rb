@@ -208,4 +208,23 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     assert_equal [], klass.find(ids)
   end
 
+  test 'paged_request' do
+
+    NUMTEST = 1000
+
+    issues = []
+    (0...NUMTEST).each do
+      issue = Issue.new
+      issue.save
+      issues << issue
+    end
+
+    n_found = 0
+    issues.each do |i|
+      n_found += 1 if Issue.find(i.id)
+    end
+
+    assert_equal NUMTEST, n_found
+  end
+
 end
