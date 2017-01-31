@@ -179,7 +179,6 @@ module CassandraObject
           # WITH COMPACT STORAGE
           schema_execute stmt, config[:keyspace]
         # end
-
       end
 
       def drop_table(table_name)

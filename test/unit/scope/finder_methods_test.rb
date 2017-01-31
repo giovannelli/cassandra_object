@@ -75,4 +75,12 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     assert [first_issue.id, second_issue.id].include?(Issue.cql_response.first.keys.first)
   end
 
+  test 'where' do
+    # todo make better tests
+    # mono parameter
+    res1 = Issue.cql_response.where("column1 < 'poi'").to_a
+    # bi parameter
+    res = Issue.cql_response.where('column1 < ?', 'poi').to_a
+  end
+
 end
