@@ -28,7 +28,6 @@ module CassandraObject
       end
 
       def where!(*values)
-        byebug
         if values.flatten.size == 1
           self.where_values += values.flatten
           self.where_values << ''
