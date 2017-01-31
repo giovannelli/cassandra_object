@@ -13,11 +13,12 @@ module CassandraObject
         end
 
         def to_query
-          [
+          str = [
               "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-              where_string,
-              "ALLOW FILTERING"
-          ].delete_if(&:blank?) * ' '
+              where_string
+          ]
+          str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+          str.delete_if(&:blank?) * ' '
         end
 
         def select_string
@@ -35,6 +36,7 @@ module CassandraObject
           wheres.flatten!
           conditions = wheres
           conditions += @scope.select_values.select{ |sv| sv != :column1 }.map{ |sv| 'column1 = ?' }
+          conditions += @scope.where_values.select.each_with_index { |_, i| i.even? }
           return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end
 
@@ -107,7 +109,7 @@ module CassandraObject
         end
       end
 
-      def select(scope)
+      def select(scope, filter = false)
         qb = QueryBuilder.new(self, scope)
 
         # TODO FIX ON RUBY-DRIVER
@@ -115,23 +117,23 @@ module CassandraObject
           arguments = nil
           statement = qb.to_query.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
         else
-          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
+          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s) + scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
           statement = qb.to_query
         end
         execute(statement, arguments)
       end
 
-      def insert(table, id, attributes, ttl = nil)
-        write(table, id, attributes, ttl)
+      def insert(table, id, attributes)
+        write(table, id, attributes.except('ttl'), attributes['ttl'])
       end
 
-      def update(table, id, attributes, ttl = nil)
-        write(table, id, attributes, ttl)
+      def update(table, id, attributes)
+        write(table, id, attributes.except('ttl'), attributes['ttl'])
       end
 
       def write(table, id, attributes, ttl)
         queries = []
-
+        # puts attributes
         attributes.each do |column, value|
           if value.present?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
@@ -164,14 +166,20 @@ module CassandraObject
 
       # SCHEMA
       def create_table(table_name, options = {})
-        stmt = "CREATE TABLE #{table_name} (" +
-            'key text,' +
-            'column1 text,' +
-            'value text,' +
-            'PRIMARY KEY (key, column1)' +
-            ')'
-        # WITH COMPACT STORAGE
-        schema_execute stmt, config[:keyspace]
+        # if options.key?(:multi_row) && !options[:multi_row]
+        #   stmt = "CREATE COLUMNFAMILY #{table_name} (KEY varchar PRIMARY KEY)"
+        #   schema_execute statement_with_options(stmt, options.except(:multi_row)), config[:keyspace]
+        # else
+          stmt = "CREATE TABLE #{table_name} (" +
+              'key text,' +
+              'column1 text,' +
+              'value text,' +
+              'PRIMARY KEY (key, column1)' +
+              ')'
+          # WITH COMPACT STORAGE
+          schema_execute stmt, config[:keyspace]
+        # end
+
       end
 
       def drop_table(table_name)

@@ -208,6 +208,24 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     assert_equal [], klass.find(ids)
   end
 
+  test 'ttl' do
+    klass = temp_object do
+      string :name
+      integer :ttl
+    end
+
+    record = klass.create!(ttl: '1')
+    assert_nothing_raised do
+      klass.find(record.id)
+    end
+
+    sleep 2
+
+    assert_raise CassandraObject::RecordNotFound do
+      klass.find(record.id)
+    end
+  end
+
   test 'paged_request' do
 
     NUMTEST = 21000

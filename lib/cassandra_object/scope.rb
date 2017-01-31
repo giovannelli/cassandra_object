@@ -6,7 +6,7 @@ module CassandraObject
     include FinderMethods, QueryMethods
 
     attr_accessor :klass
-    attr_accessor :limit_value, :select_values, :id_values, :raw_response
+    attr_accessor :limit_value, :select_values, :where_values, :id_values, :raw_response
 
     def initialize(klass)
       @klass = klass
@@ -15,6 +15,7 @@ module CassandraObject
       @raw_response = nil
       @select_values = []
       @id_values = []
+      @where_values = []
     end
 
     private

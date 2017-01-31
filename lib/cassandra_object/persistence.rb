@@ -19,7 +19,7 @@ module CassandraObject
       def create(attributes = {}, &block)
         new(attributes, &block).tap do |object|
           object.save
-        end
+        end if !self.dynamic_attributes
       end
 
       def insert_record(id, attributes)

@@ -20,6 +20,22 @@ module CassandraObject
       @@config
     end
 
+    def allow_filtering=(value)
+      @allow_filtering = value
+    end
+
+    def allow_filtering
+      @allow_filtering ||= false
+    end
+
+    def dynamic_attributes=(value)
+      @dynamic_attributes = value
+    end
+
+    def dynamic_attributes
+      @dynamic_attributes ||= false
+    end
+
     private
 
     # Returns the class descending directly from ActiveRecord::Base or an
