@@ -112,12 +112,13 @@ module CassandraObject
       def select(scope, filter = false)
         qb = QueryBuilder.new(self, scope)
 
+        where_args = scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
         # TODO FIX ON RUBY-DRIVER
         if scope.id_values.size > 1
-          arguments = nil
-          statement = qb.to_query.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
+          arguments = where_args
+          statement = qb.to_query#.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
         else
-          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s) + scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
+          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s) + where_args
           statement = qb.to_query
         end
         execute(statement, arguments)
@@ -150,8 +151,9 @@ module CassandraObject
       def delete(table, ids)
         ids = [ids] if !ids.is_a?(Array)
         arguments = nil
-        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}".gsub('?', ids.map { |id| "'#{id}'" }.join(','))
-        connection.execute statement, arguments: arguments, consistency: consistency
+        arguments = ids if ids.size == 1
+        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}"#.gsub('?', ids.map { |id| "'#{id}'" }.join(','))
+        execute(statement, arguments)
       end
 
       def execute_batch(statements)
@@ -217,7 +219,7 @@ module CassandraObject
       def create_ids_where_clause(ids)
         return ids if ids.empty?
         ids = ids.first if ids.is_a?(Array) && ids.one?
-        sql = ids.is_a?(Array) ? "#{primary_key_column} IN (?)" : "#{primary_key_column} = ?"
+        sql = ids.is_a?(Array) ? "#{primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})" : "#{primary_key_column} = ?"
         return sql
       end
 
