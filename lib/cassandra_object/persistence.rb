@@ -6,8 +6,16 @@ module CassandraObject
       class_attribute :batch_statements
     end
 
-
     module ClassMethods
+
+      def ttl=(value)
+        @ttl = value
+      end
+
+      def ttl
+        @ttl ||= nil
+      end
+
       def remove(ids)
         adapter.delete column_family, ids
       end
@@ -17,17 +25,18 @@ module CassandraObject
       end
 
       def create(attributes = {}, &block)
-        new(attributes, &block).tap do |object|
+        self.ttl = attributes[:ttl]
+        new(attributes.except(:ttl), &block).tap do |object|
           object.save
-        end if !self.dynamic_attributes
+        end
       end
 
       def insert_record(id, attributes)
-        adapter.insert column_family, id, encode_attributes(attributes)
+        adapter.insert column_family, id, encode_attributes(attributes), self.ttl
       end
 
       def update_record(id, attributes)
-        adapter.update column_family, id, encode_attributes(attributes)
+        adapter.update column_family, id, encode_attributes(attributes), self.ttl
       end
 
       def batching?

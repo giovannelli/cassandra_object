@@ -124,12 +124,12 @@ module CassandraObject
         execute(statement, arguments)
       end
 
-      def insert(table, id, attributes)
-        write(table, id, attributes.except('ttl'), attributes['ttl'])
+      def insert(table, id, attributes, ttl)
+        write(table, id, attributes, ttl)
       end
 
-      def update(table, id, attributes)
-        write(table, id, attributes.except('ttl'), attributes['ttl'])
+      def update(table, id, attributes, ttl)
+        write(table, id, attributes, ttl)
       end
 
       def write(table, id, attributes, ttl)
@@ -138,7 +138,7 @@ module CassandraObject
         attributes.each do |column, value|
           if value.present?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
-            query += " USING TTL #{ttl}" if ttl.present?
+            query += " USING TTL #{ttl.to_s}" if ttl.present?
             args = [id.to_s, column.to_s, value.to_s]
 
             queries << {query: query, arguments: args}

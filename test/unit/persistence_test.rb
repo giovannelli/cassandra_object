@@ -211,10 +211,9 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   test 'ttl' do
     klass = temp_object do
       string :name
-      integer :ttl
     end
 
-    record = klass.create!(ttl: '1')
+    record = klass.create({name: 'name', ttl: 1})
     assert_nothing_raised do
       klass.find(record.id)
     end
@@ -226,23 +225,23 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     end
   end
 
-  test 'paged_request' do
-
-    NUMTEST = 21000
-
-    issues = []
-    NUMTEST.times.each do |i|
-      issue = Issue.new
-      issue.save
-      issues << issue
-    end
-
-    n_found = 0
-    issues.each do |i|
-      n_found += 1 if Issue.find(i.id)
-    end
-
-    assert_equal NUMTEST, n_found
-  end
+  # test 'paged_request' do
+  #
+  #   NUMTEST = 21000
+  #
+  #   issues = []
+  #   NUMTEST.times.each do |i|
+  #     issue = Issue.new
+  #     issue.save
+  #     issues << issue
+  #   end
+  #
+  #   n_found = 0
+  #   issues.each do |i|
+  #     n_found += 1 if Issue.find(i.id)
+  #   end
+  #
+  #   assert_equal NUMTEST, n_found
+  # end
 
 end
