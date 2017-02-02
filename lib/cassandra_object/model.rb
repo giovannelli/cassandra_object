@@ -36,6 +36,18 @@ module CassandraObject
       @dynamic_attributes ||= false
     end
 
+    def adapter
+      @adapter ||= CassandraObject::Adapters::CassandraAdapter.new(config)
+    end
+
+    def schemaless=(value)
+      if value
+        @adapter = CassandraObject::Adapters::CassandraSchemalessAdapter.new(config)
+      else
+        @adapter = CassandraObject::Adapters::CassandraAdapter.new(config)
+      end
+    end
+
     private
 
     # Returns the class descending directly from ActiveRecord::Base or an

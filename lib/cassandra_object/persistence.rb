@@ -25,6 +25,7 @@ module CassandraObject
       end
 
       def create(attributes = {}, &block)
+        # byebug
         self.ttl = attributes.delete(:ttl)
         if !self.dynamic_attributes
           new(attributes, &block).tap do |object|

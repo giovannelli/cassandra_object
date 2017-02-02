@@ -10,7 +10,6 @@ module CassandraObject
     include ActiveModel::Conversion
     extend ActiveSupport::DescendantsTracker
 
-    include Connection
     include Identity
     include Inspect
     include Persistence

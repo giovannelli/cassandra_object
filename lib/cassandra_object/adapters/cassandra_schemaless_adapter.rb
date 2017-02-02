@@ -4,7 +4,7 @@ require 'logger'
 
 module CassandraObject
   module Adapters
-    class CassandraAdapter < AbstractAdapter
+    class CassandraSchemalessAdapter < AbstractAdapter
       class QueryBuilder
 
         def initialize(adapter, scope)
@@ -135,12 +135,6 @@ module CassandraObject
       def write(table, id, attributes, ttl)
         queries = []
         # puts attributes
-        # byebug
-        # query = "INSERT INTO #{table} () VALUES (#{(['?'] * attributes.size).join(',')})"
-        # byebug
-        # query += " USING TTL #{ttl.to_s}" if ttl.present?
-        # args = [id.to_s, column.to_s, value.to_s]
-
         attributes.each do |column, value|
           if value.present?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
@@ -175,15 +169,12 @@ module CassandraObject
 
       # SCHEMA
       def create_table(table_name, options = {})
-        stmt = "CREATE TABLE #{table_name} (key text, PRIMARY KEY (key)"
-        if options.any?
-          stmt += ','
-          opts = options.map do |k, v|
-            "#{k} #{v}"
-          end.join(' , ')
-          stmt += opts
-        end
-        stmt += ')'
+        stmt = "CREATE TABLE #{table_name} (" +
+            'key text,' +
+            'column1 text,' +
+            'value text,' +
+            'PRIMARY KEY (key, column1)' +
+            ')'
         # WITH COMPACT STORAGE
         schema_execute stmt, config[:keyspace]
       end
@@ -195,6 +186,7 @@ module CassandraObject
       def schema_execute(cql, keyspace)
         schema_db = Cassandra.cluster cassandra_cluster_options
         connection = schema_db.connect keyspace
+        #puts cql.inspect
         connection.execute cql, consistency: consistency
       end
 
@@ -206,6 +198,18 @@ module CassandraObject
 
       def consistency=(val)
         @consistency = val
+      end
+
+      def statement_with_options(stmt, options)
+        if options.any?
+          with_stmt = options.map do |k, v|
+            "#{k} = #{v}"
+          end.join(' AND ')
+
+          "#{stmt} WITH #{with_stmt}"
+        else
+          stmt
+        end
       end
 
       def create_ids_where_clause(ids)

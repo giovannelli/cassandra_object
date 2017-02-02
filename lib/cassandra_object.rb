@@ -16,6 +16,7 @@ module CassandraObject
   autoload :Model
   autoload :Persistence
   autoload :Schema
+  autoload :Schemaless
   autoload :Scope
   autoload :Scoping
   autoload :Serialization
@@ -39,7 +40,7 @@ module CassandraObject
 
     autoload :AbstractAdapter
     autoload :CassandraAdapter
-    autoload :HstoreAdapter
+    autoload :CassandraSchemalessAdapter
   end
 
   module BelongsTo

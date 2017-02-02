@@ -1,7 +1,7 @@
 require 'cassandra'
 
 module CassandraObject
-  class Schema
+  class Schemaless
 
     class << self
       DEFAULT_CREATE_KEYSPACE = {
@@ -55,7 +55,7 @@ module CassandraObject
       private
 
         def adapter
-          @adapter ||= CassandraObject::Adapters::CassandraAdapter.new(CassandraObject::Base.config)
+          @adapter ||= CassandraObject::Adapters::CassandraSchemalessAdapter.new(CassandraObject::Base.config)
         end
 
         def keyspace_execute(cql)

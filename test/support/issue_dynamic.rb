@@ -6,6 +6,7 @@ class IssueDynamic < CassandraObject::Base
 
   self.allow_filtering = true
   self.dynamic_attributes = true
+  self.schemaless = true
 
   def self.for_key key
     where_ids(key)

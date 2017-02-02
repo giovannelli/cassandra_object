@@ -21,8 +21,9 @@ end
 
 sleep 1
 CassandraObject::Schema.create_keyspace 'cassandra_object_test'
-CassandraObject::Schema.create_column_family 'Issues'
-CassandraObject::Schema.create_column_family 'IssueDynamics'
+CassandraObject::Schemaless.create_column_family 'Issues'
+CassandraObject::Schema.create_column_family 'IssueSchemas', {field1: 'text', field2: 'int'}
+CassandraObject::Schemaless.create_column_family 'IssueDynamics'
 CassandraObject::Base.adapter.consistency = :quorum
 
 CassandraObject::Base.class_eval do
