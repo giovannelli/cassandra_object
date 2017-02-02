@@ -124,11 +124,11 @@ module CassandraObject
         execute(statement, arguments)
       end
 
-      def insert(table, id, attributes, ttl)
+      def insert(table, id, attributes, ttl = nil)
         write(table, id, attributes, ttl)
       end
 
-      def update(table, id, attributes, ttl)
+      def update(table, id, attributes, ttl = nil)
         write(table, id, attributes, ttl)
       end
 

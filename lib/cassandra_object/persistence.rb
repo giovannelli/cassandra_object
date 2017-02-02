@@ -17,7 +17,7 @@ module CassandraObject
       end
 
       def remove(ids)
-        adapter.delete column_family, ids
+        delete ids
       end
 
       def delete_all
@@ -39,6 +39,19 @@ module CassandraObject
 
       def update(id, attributes)
         update_record(id, attributes)
+      end
+
+      def delete(ids, attributes = [])
+        ids = [ids] if !ids.is_a?(Array)
+        if !attributes.empty?
+          attr = {}
+          attributes.each{|a| attr[a] = nil}
+          ids.each do |id|
+            adapter.update column_family, id, encode_attributes(attr)
+          end
+        else
+          adapter.delete column_family, ids
+        end
       end
 
       def insert_record(id, attributes)

@@ -227,10 +227,13 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
 
   test 'dynamic create' do
 
-    id = "123"
-    IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    id1 = "1"
+    IssueDynamic.create(key: id1, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    id2 = "2"
+    IssueDynamic.create(key: id2, title: 'tit2', dynamic_field1: '1', dynamic_field2: '2')
     # number of dynamic fields
-    assert_equal 3, IssueDynamic.find(id)[id].size
+
+    assert_equal 3, IssueDynamic.find(id1)[id1].size
 
   end
 
@@ -238,11 +241,28 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
 
     id = "123"
     IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    # byebug
     assert_equal 3, IssueDynamic.find(id)[id].size
 
     IssueDynamic.update(id, {title: 'tit_new', dynamic_field1: 'new_one', dynamic_field2: nil})
     assert_equal 2, IssueDynamic.find(id)[id].size
 
+  end
+
+  test 'dynamic delete' do
+    id = "123"
+    IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    IssueDynamic.delete(id)
+    assert_raise CassandraObject::RecordNotFound do
+      IssueDynamic.find(id)
+    end
+  end
+
+  test 'dynamic delete attributes' do
+    id = "123"
+    IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    IssueDynamic.delete(id, [:dynamic_field1])
+    assert_equal 2, IssueDynamic.find(id)[id].size
   end
 
   test 'paged_request' do
@@ -256,12 +276,9 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
       issues << issue
     end
 
-    n_found = 0
-    issues.each do |i|
-      n_found += 1 if Issue.find(i.id)
-    end
+    found = Issue.find(issues.map{|x| x[:id]})
 
-    assert_equal NUMTEST, n_found
+    assert_equal NUMTEST, found.size
   end
 
 end

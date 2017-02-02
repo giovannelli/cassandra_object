@@ -56,7 +56,7 @@ module CassandraObject
         page = page.next_page
       end
       # limit
-      records.first(@limit_value) if @limit_value.present?
+      records = records.first(@limit_value) if @limit_value.present?
       records.each do |key, attributes|
         if self.raw_response || self.dynamic_attributes
           results << { key => attributes.values.compact.empty? ? attributes.keys : attributes }
@@ -64,6 +64,7 @@ module CassandraObject
           results << klass.instantiate(key, attributes)
         end
       end
+      results = results.reduce({}, :merge) if self.dynamic_attributes
       return results
     end
 
