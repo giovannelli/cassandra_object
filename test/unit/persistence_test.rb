@@ -225,23 +225,43 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     end
   end
 
-  # test 'paged_request' do
-  #
-  #   NUMTEST = 21000
-  #
-  #   issues = []
-  #   NUMTEST.times.each do |i|
-  #     issue = Issue.new
-  #     issue.save
-  #     issues << issue
-  #   end
-  #
-  #   n_found = 0
-  #   issues.each do |i|
-  #     n_found += 1 if Issue.find(i.id)
-  #   end
-  #
-  #   assert_equal NUMTEST, n_found
-  # end
+  test 'dynamic create' do
+
+    id = "123"
+    IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    # number of dynamic fields
+    assert_equal 3, IssueDynamic.find(id)[id].size
+
+  end
+
+  test 'dynamic update' do
+
+    id = "123"
+    IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    assert_equal 3, IssueDynamic.find(id)[id].size
+
+    IssueDynamic.update(id, {title: 'tit_new', dynamic_field1: 'new_one', dynamic_field2: nil})
+    assert_equal 2, IssueDynamic.find(id)[id].size
+
+  end
+
+  test 'paged_request' do
+
+    NUMTEST = 21000
+
+    issues = []
+    NUMTEST.times.each do |i|
+      issue = Issue.new
+      issue.save
+      issues << issue
+    end
+
+    n_found = 0
+    issues.each do |i|
+      n_found += 1 if Issue.find(i.id)
+    end
+
+    assert_equal NUMTEST, n_found
+  end
 
 end

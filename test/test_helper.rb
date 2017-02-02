@@ -7,6 +7,7 @@ require 'mocha/setup'
 require 'cassandra_object'
 require 'support/cassandra'
 require 'support/issue'
+require 'support/issue_dynamic'
 
 module CassandraObject
   class TestCase < ActiveSupport::TestCase

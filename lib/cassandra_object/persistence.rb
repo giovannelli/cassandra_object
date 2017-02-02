@@ -25,10 +25,20 @@ module CassandraObject
       end
 
       def create(attributes = {}, &block)
-        self.ttl = attributes[:ttl]
-        new(attributes.except(:ttl), &block).tap do |object|
-          object.save
+        self.ttl = attributes.delete(:ttl)
+        if !self.dynamic_attributes
+          new(attributes, &block).tap do |object|
+            object.save
+          end
+        else
+          key = attributes[:key]
+          insert_record key.to_s, attributes.except(:key).stringify_keys
+          attributes
         end
+      end
+
+      def update(id, attributes)
+        update_record(id, attributes)
       end
 
       def insert_record(id, attributes)
@@ -62,7 +72,11 @@ module CassandraObject
           if value.nil?
             encoded[column_name] = nil
           else
-            encoded[column_name] = attribute_definitions[column_name].coder.encode(value)
+            if self.dynamic_attributes
+              encoded[column_name] = value.to_s
+            else
+              encoded[column_name] = attribute_definitions[column_name].coder.encode(value)
+            end
           end
         end
         encoded

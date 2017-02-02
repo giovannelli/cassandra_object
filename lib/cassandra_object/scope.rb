@@ -58,7 +58,7 @@ module CassandraObject
       # limit
       records.first(@limit_value) if @limit_value.present?
       records.each do |key, attributes|
-        if self.raw_response
+        if self.raw_response || self.dynamic_attributes
           results << { key => attributes.values.compact.empty? ? attributes.keys : attributes }
         else
           results << klass.instantiate(key, attributes)

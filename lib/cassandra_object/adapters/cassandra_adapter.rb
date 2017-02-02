@@ -142,8 +142,9 @@ module CassandraObject
             args = [id.to_s, column.to_s, value.to_s]
 
             queries << {query: query, arguments: args}
+          else
+            queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
           end
-          queries << {query: "DELETE value FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
         end
         execute_batchable(queries)
       end
@@ -168,19 +169,14 @@ module CassandraObject
 
       # SCHEMA
       def create_table(table_name, options = {})
-        # if options.key?(:multi_row) && !options[:multi_row]
-        #   stmt = "CREATE COLUMNFAMILY #{table_name} (KEY varchar PRIMARY KEY)"
-        #   schema_execute statement_with_options(stmt, options.except(:multi_row)), config[:keyspace]
-        # else
-          stmt = "CREATE TABLE #{table_name} (" +
-              'key text,' +
-              'column1 text,' +
-              'value text,' +
-              'PRIMARY KEY (key, column1)' +
-              ')'
-          # WITH COMPACT STORAGE
-          schema_execute stmt, config[:keyspace]
-        # end
+        stmt = "CREATE TABLE #{table_name} (" +
+            'key text,' +
+            'column1 text,' +
+            'value text,' +
+            'PRIMARY KEY (key, column1)' +
+            ')'
+        # WITH COMPACT STORAGE
+        schema_execute stmt, config[:keyspace]
       end
 
       def drop_table(table_name)
