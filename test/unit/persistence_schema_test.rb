@@ -141,9 +141,8 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
 
     from_db = IssueSchema.find(issue.id)
     assert_equal Float, from_db.field.class
-    assert_equal Integer, from_db.intero.class
+    assert_equal Fixnum, from_db.intero.class
     # TODO add other types
-    byebug
 
   end
 

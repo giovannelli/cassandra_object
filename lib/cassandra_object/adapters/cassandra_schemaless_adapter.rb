@@ -130,21 +130,39 @@ module CassandraObject
         write(table, id, attributes, ttl)
       end
 
+      # def write(table, id, attributes, ttl)
+      #   queries = []
+      #   attributes.each do |column, value|
+      #     if value.present?
+      #       query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
+      #       query += " USING TTL #{ttl.to_s}" if ttl.present?
+      #       args = [id.to_s, column.to_s, value.to_s]
+      #
+      #       queries << {query: query, arguments: args}
+      #     else
+      #       queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
+      #     end
+      #   end
+      #   execute_batchable(queries)
+      # end
+
       def write(table, id, attributes, ttl)
         queries = []
+        # puts attributes
         attributes.each do |column, value|
-          if value.present?
+          if !value.nil?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
-            query += " USING TTL #{ttl.to_s}" if ttl.present?
+            query += " USING TTL #{ttl.to_s}" if !ttl.nil?
             args = [id.to_s, column.to_s, value.to_s]
 
             queries << {query: query, arguments: args}
           else
-            queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
+            queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]}
           end
         end
         execute_batchable(queries)
       end
+
 
       def delete(table, ids)
         ids = [ids] if !ids.is_a?(Array)

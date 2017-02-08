@@ -5,7 +5,7 @@ module CassandraObject
       def self.guess_type(object)
         case object
           when ::String      then Cassandra::Types.varchar
-          # when ::Fixnum      then Cassandra::Types.bigint
+          when ::Fixnum      then Cassandra::Types.int
           when ::Integer     then Cassandra::Types.int
           when ::Float       then Cassandra::Types.float
           when ::Bignum      then Cassandra::Types.varint
