@@ -59,6 +59,7 @@ module CassandraObject
       end
 
       def update_record(id, attributes)
+        return unless attributes.present?
         adapter.update column_family, id, encode_attributes(attributes), self.ttl
       end
 
