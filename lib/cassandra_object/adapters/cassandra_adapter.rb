@@ -58,6 +58,7 @@ module CassandraObject
             :private_key,
             :passphrase,
             :compression,
+            :thread_pool_size,
             :load_balancing_policy,
             :reconnection_policy,
             :retry_policy,
