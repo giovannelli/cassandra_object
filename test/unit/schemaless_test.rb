@@ -19,7 +19,7 @@ class CassandraObject::SchemalessTest < CassandraObject::TestCase
 
   test 'create_table' do
 
-    CassandraObject::Schemaless.create_table 'TestRecords', 'compression_parameters:sstable_compression' => 'SnappyCompressor'
+    CassandraObject::Schemaless.create_table 'TestRecords'
 
     begin
       CassandraObject::Schemaless.create_table 'TestRecords'

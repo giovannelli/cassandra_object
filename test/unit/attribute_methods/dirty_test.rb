@@ -4,6 +4,7 @@ class CassandraObject::AttributeMethods::DirtyTest < CassandraObject::TestCase
   test 'save clears dirty' do
     record = temp_object do
       string :name
+      self.schema_type = :schemaless
     end.new name: 'foo'
 
     assert record.changed?
@@ -17,6 +18,7 @@ class CassandraObject::AttributeMethods::DirtyTest < CassandraObject::TestCase
   test 'reload clears dirty' do
     record = temp_object do
       string :name
+      self.schema_type = :schemaless
     end.create! name: 'foo'
 
     record.name = 'bar'
@@ -30,6 +32,7 @@ class CassandraObject::AttributeMethods::DirtyTest < CassandraObject::TestCase
   test 'typecast float before dirty check' do
     record = temp_object do
       float :price
+      self.schema_type = :schemaless
     end.create(price: 5.01)
 
     record.price = '5.01'
@@ -42,6 +45,7 @@ class CassandraObject::AttributeMethods::DirtyTest < CassandraObject::TestCase
   test 'typecast boolean before dirty check' do
     record = temp_object do
       boolean :awesome
+      self.schema_type = :schemaless
     end.create(awesome: false)
 
     record.awesome = false
@@ -54,6 +58,7 @@ class CassandraObject::AttributeMethods::DirtyTest < CassandraObject::TestCase
   test 'write_attribute' do
     object = temp_object do
       string :name
+      self.schema_type = :schemaless
     end
 
     expected = {"name"=>[nil, "foo"]}

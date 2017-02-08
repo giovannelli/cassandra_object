@@ -5,8 +5,7 @@ class Issue < CassandraObject::Base
   before_create { self.description ||= 'funny' }
 
   self.allow_filtering = true
-  self.dynamic_attributes = false
-  self.schemaless = true
+  self.schema_type = :schemaless
 
   def self.for_key key
     where_ids(key)

@@ -110,16 +110,14 @@ module CassandraObject
       end
 
       def select(scope, filter = false)
-        qb = QueryBuilder.new(self, scope)
+        statement = QueryBuilder.new(self, scope).to_query
 
         where_args = scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
         # TODO FIX ON RUBY-DRIVER
         if scope.id_values.size > 1
           arguments = where_args
-          statement = qb.to_query#.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
         else
           arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s) + where_args
-          statement = qb.to_query
         end
         execute(statement, arguments)
       end
@@ -134,7 +132,6 @@ module CassandraObject
 
       def write(table, id, attributes, ttl)
         queries = []
-        # puts attributes
         attributes.each do |column, value|
           if value.present?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
@@ -168,7 +165,7 @@ module CassandraObject
       end
 
       # SCHEMA
-      def create_table(table_name, options = {})
+      def create_table(table_name, params = {})
         stmt = "CREATE TABLE #{table_name} (" +
             'key text,' +
             'column1 text,' +
@@ -176,7 +173,7 @@ module CassandraObject
             'PRIMARY KEY (key, column1)' +
             ')'
         # WITH COMPACT STORAGE
-        schema_execute stmt, config[:keyspace]
+        schema_execute statement_with_options(stmt, params[:options]), config[:keyspace]
       end
 
       def drop_table(table_name)
@@ -200,16 +197,28 @@ module CassandraObject
         @consistency = val
       end
 
-      def statement_with_options(stmt, options)
-        if options.any?
-          with_stmt = options.map do |k, v|
-            "#{k} = #{v}"
-          end.join(' AND ')
-
-          "#{stmt} WITH #{with_stmt}"
+      def statement_create_with_options(stmt, options)
+        if !options.nil?
+          statement_create_with_options stmt, options
         else
-          stmt
+          # standard
+          "#{stmt} WITH COMPACT STORAGE
+              AND bloom_filter_fp_chance = 0.001
+              AND CLUSTERING ORDER BY (column1 ASC)
+              AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
+              AND comment = ''
+              AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+              AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+              AND dclocal_read_repair_chance = 0.0
+              AND default_time_to_live = 0
+              AND gc_grace_seconds = 864000
+              AND max_index_interval = 2048
+              AND memtable_flush_period_in_ms = 0
+              AND min_index_interval = 128
+              AND read_repair_chance = 1.0
+              AND speculative_retry = 'NONE';"
         end
+
       end
 
       def create_ids_where_clause(ids)
@@ -218,6 +227,7 @@ module CassandraObject
         sql = ids.is_a?(Array) ? "#{primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})" : "#{primary_key_column} = ?"
         return sql
       end
+
 
     end
   end

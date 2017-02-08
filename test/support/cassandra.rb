@@ -22,7 +22,7 @@ end
 sleep 1
 CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schemaless.create_column_family 'Issues'
-CassandraObject::Schema.create_column_family 'IssueSchemas', {field1: 'text', field2: 'int'}
+CassandraObject::Schema.create_column_family 'IssueSchemas', {attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
 CassandraObject::Schemaless.create_column_family 'IssueDynamics'
 CassandraObject::Base.adapter.consistency = :quorum
 

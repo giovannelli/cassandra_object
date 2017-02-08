@@ -16,6 +16,8 @@ class CassandraObject::AttributeMethods::TypecastingTest < CassandraObject::Test
     integer :price
     json    :orders
     string  :name
+
+    self.schema_type = :schemaless
   end
 
   class TestChildIssue < TestIssue

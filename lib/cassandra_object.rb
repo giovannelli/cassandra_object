@@ -63,6 +63,7 @@ module CassandraObject
     autoload :JsonType
     autoload :StringType
     autoload :TimeType
+    autoload :TypeHelper
   end
 end
 

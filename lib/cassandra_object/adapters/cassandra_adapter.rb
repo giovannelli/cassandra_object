@@ -13,38 +13,44 @@ module CassandraObject
         end
 
         def to_query
-          str = [
-              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-              where_string
-          ]
-          str << "ALLOW FILTERING" if @scope.klass.allow_filtering
-          str.delete_if(&:blank?) * ' '
+          [
+            "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+            where_string
+          ].delete_if(&:blank?) * ' '
         end
 
         def select_string
-          selected_values = @scope.select_values.select{ |sv| sv == :column1 || sv == :values }
-          if selected_values.any?
-            (['KEY'] | selected_values) * ','
+          if @scope.select_values.any?
+            (['KEY'] | @scope.select_values) * ','
           else
             '*'
           end
         end
 
         def where_string
-          wheres = []
-          wheres << @adapter.create_ids_where_clause(@scope.id_values)
-          wheres.flatten!
-          conditions = wheres
-          conditions += @scope.select_values.select{ |sv| sv != :column1 }.map{ |sv| 'column1 = ?' }
-          conditions += @scope.where_values.select.each_with_index { |_, i| i.even? }
-          return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
+          wheres = @scope.where_values.dup
+          if @scope.id_values.any?
+            wheres << @adapter.create_ids_where_clause(@scope)
+          end
+
+          if wheres.any?
+            "WHERE #{wheres * ' AND '}"
+          end
         end
 
+        # def limit_string
+        #   if @scope.limit_value
+        #     "LIMIT #{@scope.limit_value}"
+        #   else
+        #     ""
+        #   end
+        # end
+
       end
 
-      def primary_key_column
-        'key'
-      end
+      # def primary_key_column
+      #   @scope.keys.tr('()','')
+      # end
 
       def cassandra_cluster_options
         cluster_options = config.slice(*[
@@ -105,23 +111,25 @@ module CassandraObject
 
       def execute(statement, arguments = [])
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
-          connection.execute statement, arguments: arguments, consistency: consistency, page_size: config[:page_size]
+          type_hints = []
+          arguments.map{|a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } if !arguments.nil?
+          connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: consistency, page_size: config[:page_size]
         end
       end
 
-      def select(scope, filter = false)
-        qb = QueryBuilder.new(self, scope)
+      def select(scope)
+        statement = QueryBuilder.new(self, scope).to_query
 
-        where_args = scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
         # TODO FIX ON RUBY-DRIVER
-        if scope.id_values.size > 1
-          arguments = where_args
-          statement = qb.to_query#.gsub('?', scope.id_values.map { |id| "'#{id}'" }.join(','))
-        else
-          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s) + where_args
-          statement = qb.to_query
+        if scope.id_values.size == 1
+          arguments = scope.id_values
         end
-        execute(statement, arguments)
+
+        execute(statement, arguments).rows.each do |cql_row|
+          attributes = cql_row.to_hash
+          key = attributes.delete(scope._key)
+          yield(key, attributes) unless attributes.empty?
+        end
       end
 
       def insert(table, id, attributes, ttl = nil)
@@ -129,38 +137,34 @@ module CassandraObject
       end
 
       def update(table, id, attributes, ttl = nil)
-        write(table, id, attributes, ttl)
+        write_update(table, id, attributes)
       end
 
-      def write(table, id, attributes, ttl)
-        queries = []
-        # puts attributes
-        # byebug
-        # query = "INSERT INTO #{table} () VALUES (#{(['?'] * attributes.size).join(',')})"
-        # byebug
-        # query += " USING TTL #{ttl.to_s}" if ttl.present?
-        # args = [id.to_s, column.to_s, value.to_s]
+      def write(table, id, attributes, ttl = nil)
+        statement = "INSERT INTO #{table} (#{(attributes.keys).join(',')}) VALUES (#{(['?'] * attributes.size).join(',')})"
+        statement += " USING TTL #{ttl.to_s}" if ttl.present?
+        arguments = attributes.values
+        execute(statement, arguments)
+      end
 
-        attributes.each do |column, value|
-          if value.present?
-            query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
-            query += " USING TTL #{ttl.to_s}" if ttl.present?
-            args = [id.to_s, column.to_s, value.to_s]
-
-            queries << {query: query, arguments: args}
-          else
-            queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
-          end
+      def write_update(table, id, attributes)
+        queries =[]
+        # id here is the name of the key of the model
+        id_value = attributes[id]
+        if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
+          statement = "INSERT INTO #{table} (#{(not_nil_attributes.keys).join(',')}) VALUES (#{(['?'] * not_nil_attributes.size).join(',')})"
+          queries << {query: statement, arguments: not_nil_attributes.values}
+        end
+        if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
+          queries << {query: "DELETE #{nil_attributes.keys.join(',')} FROM #{table} WHERE #{id} = ?", arguments: [id_value.to_s]}
         end
         execute_batchable(queries)
       end
 
-      def delete(table, ids)
+      def delete(table, key, ids)
         ids = [ids] if !ids.is_a?(Array)
-        arguments = nil
-        arguments = ids if ids.size == 1
-        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}"#.gsub('?', ids.map { |id| "'#{id}'" }.join(','))
-        execute(statement, arguments)
+        statement = "DELETE FROM #{table} WHERE #{key} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+        execute(statement, nil)
       end
 
       def execute_batch(statements)
@@ -174,18 +178,17 @@ module CassandraObject
       end
 
       # SCHEMA
-      def create_table(table_name, options = {})
-        stmt = "CREATE TABLE #{table_name} (key text, PRIMARY KEY (key)"
-        if options.any?
-          stmt += ','
-          opts = options.map do |k, v|
-            "#{k} #{v}"
-          end.join(' , ')
-          stmt += opts
+      def create_table(table_name, params = {})
+        stmt = "CREATE TABLE #{table_name}"
+        if params.any? && !params[:attributes].present?
+          raise 'No attributes for the table'
+        elsif !params[:attributes].include? 'PRIMARY KEY'
+          raise 'No PRIMARY KEY defined'
         end
-        stmt += ')'
+
+        stmt += "(#{params[:attributes]})"
         # WITH COMPACT STORAGE
-        schema_execute stmt, config[:keyspace]
+        schema_execute statement_create_with_options(stmt, params[:options]), config[:keyspace]
       end
 
       def drop_table(table_name)
@@ -208,7 +211,31 @@ module CassandraObject
         @consistency = val
       end
 
-      def create_ids_where_clause(ids)
+      def statement_create_with_options(stmt, options = '')
+        if !options.nil?
+          statement_with_options stmt, options
+        else
+          # standard
+          "#{stmt} WITH COMPACT STORAGE
+              AND bloom_filter_fp_chance = 0.001
+              AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
+              AND comment = ''
+              AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+              AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+              AND dclocal_read_repair_chance = 0.0
+              AND default_time_to_live = 0
+              AND gc_grace_seconds = 864000
+              AND max_index_interval = 2048
+              AND memtable_flush_period_in_ms = 0
+              AND min_index_interval = 128
+              AND read_repair_chance = 1.0
+              AND speculative_retry = 'NONE';"
+        end
+      end
+
+      def create_ids_where_clause(scope)
+        ids = scope.id_values
+        primary_key_column = scope._key
         return ids if ids.empty?
         ids = ids.first if ids.is_a?(Array) && ids.one?
         sql = ids.is_a?(Array) ? "#{primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})" : "#{primary_key_column} = ?"

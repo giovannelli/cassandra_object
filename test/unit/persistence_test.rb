@@ -11,6 +11,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   test 'encode_attributes' do
     klass = temp_object do
       string :description
+      self.schema_type = :schemaless
     end
 
     assert_equal(
@@ -85,6 +86,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   test 'save!' do
     klass = temp_object do
       string :description
+      self.schema_type = :schemaless
       validates :description, presence: true
     end
 
@@ -148,6 +150,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
 
   test 'becomes' do
     klass = temp_object do
+      self.schema_type = :schemaless
     end
 
     assert_kind_of klass, Issue.new.becomes(klass)
@@ -177,6 +180,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   test 'remove' do
     klass = temp_object do
       string :name
+      self.schema_type = :schemaless
     end
 
     record = klass.new(name: 'cool')
@@ -195,6 +199,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   test 'remove multiple' do
     klass = temp_object do
       string :name
+      self.schema_type = :schemaless
     end
 
     ids = []
@@ -211,6 +216,7 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   test 'ttl' do
     klass = temp_object do
       string :name
+      self.schema_type = :schemaless
     end
 
     record = klass.create({name: 'name', ttl: 1})
@@ -234,14 +240,12 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     # number of dynamic fields
 
     assert_equal 3, IssueDynamic.find(id1)[id1].size
-
   end
 
   test 'dynamic update' do
 
     id = "123"
     IssueDynamic.create(key: id, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
-    # byebug
     assert_equal 3, IssueDynamic.find(id)[id].size
 
     IssueDynamic.update(id, {title: 'tit_new', dynamic_field1: 'new_one', dynamic_field2: nil})

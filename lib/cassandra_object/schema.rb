@@ -29,7 +29,7 @@ module CassandraObject
         adapter.create_table table_name, options
       end
 
-      def alter_column_family(column_family, instruction, options = {})
+      def alter_column_family(column_family, instruction, options = '')
         stmt = "ALTER TABLE #{column_family} #{instruction}"
         keyspace_execute adapter.statement_with_options(stmt, options)
       end

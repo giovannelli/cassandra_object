@@ -28,24 +28,35 @@ module CassandraObject
       @allow_filtering ||= false
     end
 
-    def dynamic_attributes=(value)
-      @dynamic_attributes = value
+    def schema_type=(value)
+      case value
+        when :schemaless, :dynamic_attributes
+          @adapter = CassandraObject::Adapters::CassandraSchemalessAdapter.new(config)
+        else
+          @adapter = CassandraObject::Adapters::CassandraAdapter.new(config)
+      end
+      @schema_type = value
     end
 
-    def dynamic_attributes
-      @dynamic_attributes ||= false
+    def schema_type
+      @schema_type ||= :standard
+    end
+
+    def _key
+      # todo only first key
+      keys.tr('()','').split(',').first
+    end
+
+    def keys=(value)
+      @keys = value
+    end
+
+    def keys
+      @keys ||= '(key)'
     end
 
     def adapter
       @adapter ||= CassandraObject::Adapters::CassandraAdapter.new(config)
-    end
-
-    def schemaless=(value)
-      if value
-        @adapter = CassandraObject::Adapters::CassandraSchemalessAdapter.new(config)
-      else
-        @adapter = CassandraObject::Adapters::CassandraAdapter.new(config)
-      end
     end
 
     private
