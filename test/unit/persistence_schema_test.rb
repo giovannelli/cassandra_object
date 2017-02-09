@@ -80,7 +80,6 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
 
   test 'becomes' do
     klass = temp_object do
-      self.schema_type = :schemaless
     end
 
     assert_kind_of klass, IssueSchema.new.becomes(klass)
@@ -143,6 +142,7 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
     assert_equal Float, from_db.field.class
     assert_equal Fixnum, from_db.intero.class
     # TODO add other types
+    # byebug
 
   end
 

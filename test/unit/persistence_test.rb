@@ -9,24 +9,19 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   end
 
   test 'encode_attributes' do
-    klass = temp_object do
-      string :description
-      self.schema_type = :schemaless
-    end
-
     assert_equal(
       {},
-      klass.encode_attributes({})
+      Issue.encode_attributes({})
     )
 
     assert_equal(
       {'description' => nil},
-      klass.encode_attributes({'description' => nil})
+      Issue.encode_attributes({'description' => nil})
     )
 
     assert_equal(
       {'description' => 'lol'},
-      klass.encode_attributes({'description' => 'lol'})
+      Issue.encode_attributes({'description' => 'lol'})
     )
   end
 
@@ -84,19 +79,20 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   end
 
   test 'save!' do
-    klass = temp_object do
-      string :description
-      self.schema_type = :schemaless
-      validates :description, presence: true
-    end
+    begin
+      Issue.validates(:description, presence: true)
 
-    record = klass.new(description: 'bad')
-    record.save!
-
-    assert_raise CassandraObject::RecordInvalid do
-      record = klass.new
+      record = Issue.new(description: 'bad')
       record.save!
+
+      assert_raise CassandraObject::RecordInvalid do
+        record = Issue.new
+        record.save!
+      end
+    ensure
+      Issue.reset_callbacks(:validate)
     end
+
   end
 
   test 'destroy' do
@@ -150,7 +146,6 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
 
   test 'becomes' do
     klass = temp_object do
-      self.schema_type = :schemaless
     end
 
     assert_kind_of klass, Issue.new.becomes(klass)
@@ -178,56 +173,41 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
   end
 
   test 'remove' do
-    klass = temp_object do
-      string :name
-      self.schema_type = :schemaless
-    end
-
-    record = klass.new(name: 'cool')
+    record = Issue.new(title: 'cool')
     record.save!
 
     id = record.id
-    assert_equal id, klass.find(id).id
+    assert_equal id, Issue.find(id).id
 
-    klass.remove(id)
+    Issue.remove(id)
 
     assert_raise CassandraObject::RecordNotFound do
-      klass.find(id)
+      Issue.find(id)
     end
   end
 
   test 'remove multiple' do
-    klass = temp_object do
-      string :name
-      self.schema_type = :schemaless
-    end
-
     ids = []
     (1..10).each do
-      record = klass.create!(name: 'cool')
+      record = Issue.create!(title: 'cool')
       ids << record.id
     end
 
-    klass.remove(ids)
+    Issue.remove(ids)
 
-    assert_equal [], klass.find(ids)
+    assert_equal [], Issue.find(ids)
   end
 
   test 'ttl' do
-    klass = temp_object do
-      string :name
-      self.schema_type = :schemaless
-    end
-
-    record = klass.create({name: 'name', ttl: 1})
+    record = Issue.create({title: 'name', ttl: 1})
     assert_nothing_raised do
-      klass.find(record.id)
+      Issue.find(record.id)
     end
 
     sleep 2
 
     assert_raise CassandraObject::RecordNotFound do
-      klass.find(record.id)
+      Issue.find(record.id)
     end
   end
 
@@ -269,20 +249,20 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     assert_equal 2, IssueDynamic.find(id)[id].size
   end
 
-  test 'paged_request' do
-
-    NUMTEST = 21000
-
-    issues = []
-    NUMTEST.times.each do |i|
-      issue = Issue.new
-      issue.save
-      issues << issue
-    end
-
-    found = Issue.find(issues.map{|x| x[:id]})
-
-    assert_equal NUMTEST, found.size
-  end
+  # test 'paged_request' do
+  #
+  #   NUMTEST = 21000
+  #
+  #   issues = []
+  #   NUMTEST.times.each do |i|
+  #     issue = Issue.new
+  #     issue.save
+  #     issues << issue
+  #   end
+  #
+  #   found = Issue.find(issues.map{|x| x[:id]})
+  #
+  #   assert_equal NUMTEST, found.size
+  # end
 
 end

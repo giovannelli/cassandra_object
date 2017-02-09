@@ -1,11 +1,9 @@
-class IssueSchema < CassandraObject::Base
+class IssueSchema < CassandraObject::BaseSchema
   string :id
   string :description
   string :title
   float :field
   integer :intero
-  time :created_at
-  time :updated_at
 
   before_create { self.description ||= 'funny' }
 

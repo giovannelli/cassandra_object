@@ -7,6 +7,9 @@ module CassandraObject
 
   autoload :AttributeMethods
   autoload :Base
+  autoload :BaseSchema
+  autoload :BaseSchemaless
+  autoload :BaseSchemalessDynamic
   autoload :BelongsTo
   autoload :Callbacks
   autoload :Connection

@@ -12,7 +12,6 @@ class CassandraObject::BelongsToTest < CassandraObject::TestCase
     string :target_type
     belongs_to :target, polymorphic: true
 
-    self.schema_type = :schemaless
   end
 
   test 'belongs_to' do

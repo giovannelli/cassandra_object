@@ -26,6 +26,7 @@ module CassandraObject
     extend  Model
 
     include Serialization
+
   end
 end
 

@@ -24,7 +24,7 @@ CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schemaless.create_column_family 'Issues'
 CassandraObject::Schema.create_column_family 'IssueSchemas', {attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
 CassandraObject::Schemaless.create_column_family 'IssueDynamics'
-CassandraObject::Base.adapter.consistency = :quorum
+# CassandraObject::Base.adapter.consistency = :quorum
 
 CassandraObject::Base.class_eval do
   class_attribute :created_records

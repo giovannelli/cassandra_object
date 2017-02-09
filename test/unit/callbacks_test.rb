@@ -1,10 +1,9 @@
 require 'test_helper'
 
 class CassandraObject::CallbacksTest < CassandraObject::TestCase
-  class TestIssue < CassandraObject::Base
+  class TestIssue < CassandraObject::BaseSchemaless
     self.column_family = 'Issues'
     string :description
-    self.schema_type = :schemaless
 
     %w(before_validation after_validation after_save after_create after_update after_destroy).each do |method|
       send(method) do

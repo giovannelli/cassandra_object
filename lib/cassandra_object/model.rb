@@ -28,20 +28,6 @@ module CassandraObject
       @allow_filtering ||= false
     end
 
-    def schema_type=(value)
-      case value
-        when :schemaless, :dynamic_attributes
-          @adapter = CassandraObject::Adapters::CassandraSchemalessAdapter.new(config)
-        else
-          @adapter = CassandraObject::Adapters::CassandraAdapter.new(config)
-      end
-      @schema_type = value
-    end
-
-    def schema_type
-      @schema_type ||= :standard
-    end
-
     def _key
       # todo only first key
       keys.tr('()','').split(',').first
@@ -55,16 +41,14 @@ module CassandraObject
       @keys ||= '(key)'
     end
 
-    def adapter
-      @adapter ||= CassandraObject::Adapters::CassandraAdapter.new(config)
-    end
-
     private
 
     # Returns the class descending directly from ActiveRecord::Base or an
     # abstract class, if any, in the inheritance hierarchy.
     def class_of_active_record_descendant(klass)
-      if klass == Base || klass.superclass == Base
+      # klass
+
+      if (klass == Base || klass.superclass == Base) || (klass == BaseSchemaless || klass.superclass == BaseSchemaless) || (klass == BaseSchema || klass.superclass == BaseSchema) || (klass == BaseSchemalessDynamic || klass.superclass == BaseSchemalessDynamic)
         klass
       elsif klass.superclass.nil?
         raise "#{name} doesn't belong in a hierarchy descending from CassandraObject"
