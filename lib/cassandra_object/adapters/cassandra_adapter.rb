@@ -216,9 +216,8 @@ module CassandraObject
           statement_with_options stmt, options
         else
           # standard
-          "#{stmt} WITH COMPACT STORAGE
-              AND bloom_filter_fp_chance = 0.001
-              AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
+          "#{stmt} WITH bloom_filter_fp_chance = 0.001
+              AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
               AND comment = ''
               AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
               AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}

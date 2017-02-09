@@ -217,7 +217,7 @@ module CassandraObject
 
       def statement_create_with_options(stmt, options)
         if !options.nil?
-          statement_create_with_options stmt, options
+          statement_with_options stmt, options
         else
           # standard
           "#{stmt} WITH COMPACT STORAGE

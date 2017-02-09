@@ -37,8 +37,8 @@ module CassandraObject
         @batch_statements = nil
       end
 
-      def statement_with_options(stmt, options = '')
-        if !options.nil? && !options.empty?
+      def statement_with_options(stmt, options)
+        if options.present?
           with_stmt = options.split(',').map do |o|
             "#{o}"
           end.join(' AND ')

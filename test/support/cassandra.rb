@@ -2,7 +2,7 @@ Bundler.require :cassandra
 
 CassandraObject::Base.config = {
   keyspace: 'cassandra_object_test',
-  hosts: '127.0.0.1',
+  hosts: ['127.0.0.1'],
   compression: :lz4,
   connect_timeout: 0.1,
   request_timeout: 0.1,
@@ -24,7 +24,9 @@ CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schemaless.create_column_family 'Issues'
 CassandraObject::Schema.create_column_family 'IssueSchemas', {attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
 CassandraObject::Schemaless.create_column_family 'IssueDynamics'
-# CassandraObject::Base.adapter.consistency = :quorum
+CassandraObject::BaseSchemaless.adapter.consistency = :quorum
+CassandraObject::BaseSchemalessDynamic.adapter.consistency = :quorum
+CassandraObject::BaseSchema.adapter.consistency = :quorum
 
 CassandraObject::Base.class_eval do
   class_attribute :created_records
