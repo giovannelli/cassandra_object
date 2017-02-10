@@ -9,6 +9,8 @@ require 'support/cassandra'
 require 'support/issue'
 require 'support/issue_dynamic'
 require 'support/issue_schema'
+require 'support/issue_schema_child'
+require 'support/issue_schema_father'
 
 module CassandraObject
   class TestCase < ActiveSupport::TestCase

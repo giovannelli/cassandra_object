@@ -145,5 +145,12 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
 
   end
 
+  test 'belongs_to schema' do
+    father = IssueSchemaFather.create title: 'father'
+    child = IssueSchemaChild.create title: 'child', issue_schema_father: father
+    child.save
+    assert_equal father, IssueSchemaChild.find(child.id).issue_schema_father
+  end
+
 
 end
