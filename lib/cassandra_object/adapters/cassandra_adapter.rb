@@ -68,10 +68,10 @@ module CassandraObject
           :private_key,
           :protocol_version,
           :reconnection_policy,
-          :request_timeout,
           :retry_policy,
           :server_cert,
           :ssl,
+          :timeout,
           :trace,
           :username
         ])
@@ -88,11 +88,10 @@ module CassandraObject
 
         # Setting defaults
         cluster_options.merge!({
-                                   max_schema_agreement_wait: 1,
-                                   consistency: cluster_options[:consistency]||:quorum,
-                                   protocol_version: cluster_options[:protocol_version]||3,
-                                   page_size: cluster_options[:page_size] || 10000
-                               })
+          consistency: cluster_options[:consistency] || :quorum,
+          protocol_version: cluster_options[:protocol_version] || 3,
+          page_size: cluster_options[:page_size] || 10000
+        })
         return cluster_options
       end
 
