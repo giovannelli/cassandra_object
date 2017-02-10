@@ -5,12 +5,14 @@ CassandraObject::Base.config = {
   hosts: ['127.0.0.1'],
   compression: :lz4,
   connect_timeout: 0.1,
-  request_timeout: 0.1,
-  consistency: :all,
+  timeout: 1,
+  consistency: :quorum,
   protocol_version: 3,
   page_size: 10000,
-  trace: true
-  #logger: Logger.new($stderr)
+  trace: true,
+  connections_per_local_node: 2,
+  connections_per_remote_node: 2,
+  logger: Logger.new($stderr)
 }
 
 begin
