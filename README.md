@@ -2,7 +2,7 @@
 [![Build Status](https://secure.travis-ci.org/giovannelli/cassandra_object.png)](http://travis-ci.org/giovannelli/cassandra_object) [![Code Climate](https://codeclimate.com/github/giovannelli/cassandra_object/badges/gpa.svg)](https://codeclimate.com/github/giovannelli/cassandra_object)
 
 Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord. 
-Use cql3 provided by ruby-driver gem and uses the old thrift structure:
+Use cql3 provided by ruby-driver gem and uses the old thrift structure with the possible option at [this link](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/create_table_r.html?hl=create%2Ctable):
 
 ```shell
 
@@ -29,7 +29,7 @@ CREATE TABLE keyspace.table (
     AND speculative_retry = 'NONE';
 ```
 
-You can also use the a custom schema structure with the possible options that can be found [here](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlCreateTable.html#tabProp):
+You can also use the a custom schema structure with the possible options at [this link](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlCreateTable.html#tabProp):
 
 ```shell
 

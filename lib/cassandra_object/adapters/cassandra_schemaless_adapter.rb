@@ -201,8 +201,11 @@ module CassandraObject
       def schema_execute(cql, keyspace)
         schema_db = Cassandra.cluster cassandra_cluster_options
         connection = schema_db.connect keyspace
-        #puts cql.inspect
         connection.execute cql, consistency: consistency
+      end
+
+      def cassandra_version
+        @cassandra_version ||= execute('select release_version from system.local').rows.first['release_version'].to_f
       end
 
       # /SCHEMA
@@ -220,23 +223,40 @@ module CassandraObject
           statement_with_options stmt, options
         else
           # standard
-          "#{stmt} WITH COMPACT STORAGE
-              AND bloom_filter_fp_chance = 0.001
-              AND CLUSTERING ORDER BY (column1 ASC)
-              AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
-              AND comment = ''
-              AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
-              AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
-              AND dclocal_read_repair_chance = 0.0
-              AND default_time_to_live = 0
-              AND gc_grace_seconds = 864000
-              AND max_index_interval = 2048
-              AND memtable_flush_period_in_ms = 0
-              AND min_index_interval = 128
-              AND read_repair_chance = 1.0
-              AND speculative_retry = 'NONE';"
+          if cassandra_version < 3
+            "#{stmt} WITH COMPACT STORAGE
+                AND bloom_filter_fp_chance = 0.001
+                AND CLUSTERING ORDER BY (column1 ASC)
+                AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
+                AND comment = ''
+                AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+                AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+                AND dclocal_read_repair_chance = 0.0
+                AND default_time_to_live = 0
+                AND gc_grace_seconds = 864000
+                AND max_index_interval = 2048
+                AND memtable_flush_period_in_ms = 0
+                AND min_index_interval = 128
+                AND read_repair_chance = 1.0
+                AND speculative_retry = 'NONE';"
+          elsif cassandra_version > 3
+            "#{stmt} WITH COMPACT STORAGE
+                AND bloom_filter_fp_chance = 0.001
+                AND CLUSTERING ORDER BY (column1 ASC)
+                AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
+                AND comment = ''
+                AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
+                AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+                AND dclocal_read_repair_chance = 0.0
+                AND default_time_to_live = 0
+                AND gc_grace_seconds = 864000
+                AND max_index_interval = 2048
+                AND memtable_flush_period_in_ms = 0
+                AND min_index_interval = 128
+                AND read_repair_chance = 1.0
+                AND speculative_retry = 'NONE';"
+          end
         end
-
       end
 
       def create_ids_where_clause(ids)
@@ -245,7 +265,6 @@ module CassandraObject
         sql = ids.is_a?(Array) ? "#{primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})" : "#{primary_key_column} = ?"
         return sql
       end
-
 
     end
   end
