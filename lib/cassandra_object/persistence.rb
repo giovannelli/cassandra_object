@@ -20,13 +20,18 @@ module CassandraObject
         delete ids
       end
 
+      def _key
+        # todo only mono primary id for now
+        self.keys.tr('()','').split(',').first
+      end
+
       def delete_all
         adapter.execute "TRUNCATE #{column_family}"
       end
 
       def create(attributes = {}, &block)
         self.ttl = attributes.delete(:ttl)
-        if !self.dynamic_attributes
+        if self.schema_type != :dynamic_attributes
           new(attributes, &block).tap do |object|
             object.save
           end
@@ -50,16 +55,24 @@ module CassandraObject
             adapter.update column_family, id, encode_attributes(attr)
           end
         else
-          adapter.delete column_family, ids
+          if self.schema_type == :standard
+            adapter.delete column_family, self._key, ids
+          else
+            adapter.delete column_family, ids
+          end
         end
       end
 
       def insert_record(id, attributes)
+        attributes[self._key] = id if self.schema_type == :standard
         adapter.insert column_family, id, encode_attributes(attributes), self.ttl
       end
 
       def update_record(id, attributes)
-        return unless attributes.present?
+        if self.schema_type == :standard
+          attributes[self._key] = id
+          id = self._key
+        end
         adapter.update column_family, id, encode_attributes(attributes), self.ttl
       end
 
@@ -86,8 +99,10 @@ module CassandraObject
           if value.nil?
             encoded[column_name] = nil
           else
-            if self.dynamic_attributes
+            if self.schema_type == :dynamic_attributes
               encoded[column_name] = value.to_s
+            elsif self.schema_type == :standard
+              encoded[column_name] = value
             else
               encoded[column_name] = attribute_definitions[column_name].coder.encode(value)
             end

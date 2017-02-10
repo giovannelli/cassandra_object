@@ -28,12 +28,17 @@ module CassandraObject
       @allow_filtering ||= false
     end
 
-    def dynamic_attributes=(value)
-      @dynamic_attributes = value
+    def _key
+      # todo only first key
+      keys.tr('()','').split(',').first
     end
 
-    def dynamic_attributes
-      @dynamic_attributes ||= false
+    def keys=(value)
+      @keys = value
+    end
+
+    def keys
+      @keys ||= '(key)'
     end
 
     private
@@ -41,7 +46,9 @@ module CassandraObject
     # Returns the class descending directly from ActiveRecord::Base or an
     # abstract class, if any, in the inheritance hierarchy.
     def class_of_active_record_descendant(klass)
-      if klass == Base || klass.superclass == Base
+      # klass
+
+      if (klass == Base || klass.superclass == Base) || (klass == BaseSchemaless || klass.superclass == BaseSchemaless) || (klass == BaseSchema || klass.superclass == BaseSchema) || (klass == BaseSchemalessDynamic || klass.superclass == BaseSchemalessDynamic)
         klass
       elsif klass.superclass.nil?
         raise "#{name} doesn't belong in a hierarchy descending from CassandraObject"

@@ -37,6 +37,17 @@ module CassandraObject
         @batch_statements = nil
       end
 
+      def statement_with_options(stmt, options)
+        if options.present?
+          with_stmt = options.split(',').map do |o|
+            "#{o}"
+          end.join(' AND ')
+
+          stmt = "#{stmt} WITH #{with_stmt}"
+        end
+        stmt
+      end
+
       def execute_batchable(statements)
         if defined?(@batch_statements) && @batch_statements
           @batch_statements += statements

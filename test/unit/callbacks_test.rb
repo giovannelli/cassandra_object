@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class CassandraObject::CallbacksTest < CassandraObject::TestCase
-  class TestIssue < CassandraObject::Base
+  class TestIssue < CassandraObject::BaseSchemaless
     self.column_family = 'Issues'
     string :description
 

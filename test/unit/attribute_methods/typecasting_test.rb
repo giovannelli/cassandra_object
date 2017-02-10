@@ -7,7 +7,7 @@ class CassandraObject::AttributeMethods::TypecastingTest < CassandraObject::Test
   class CustomCoder < CassandraObject::Types::BaseType
   end
 
-  class TestIssue < CassandraObject::Base
+  class TestIssue < CassandraObject::BaseSchemaless
     self.column_family = 'Issues'
 
     attribute :custom_column, type: CustomType, coder: CustomCoder
@@ -16,6 +16,7 @@ class CassandraObject::AttributeMethods::TypecastingTest < CassandraObject::Test
     integer :price
     json    :orders
     string  :name
+
   end
 
   class TestChildIssue < TestIssue

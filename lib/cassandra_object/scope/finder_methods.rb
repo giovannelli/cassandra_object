@@ -28,7 +28,7 @@ module CassandraObject
         def find_one(id)
           if id.blank?
             raise CassandraObject::RecordNotFound, "Couldn't find #{self.name} with key #{id.inspect}"
-          elsif self.dynamic_attributes
+          elsif self.schema_type == :dynamic_attributes
             record = where_ids(id).to_a
             raise CassandraObject::RecordNotFound if record.empty?
             record

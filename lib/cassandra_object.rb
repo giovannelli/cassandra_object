@@ -7,6 +7,9 @@ module CassandraObject
 
   autoload :AttributeMethods
   autoload :Base
+  autoload :BaseSchema
+  autoload :BaseSchemaless
+  autoload :BaseSchemalessDynamic
   autoload :BelongsTo
   autoload :Callbacks
   autoload :Connection
@@ -16,6 +19,7 @@ module CassandraObject
   autoload :Model
   autoload :Persistence
   autoload :Schema
+  autoload :Schemaless
   autoload :Scope
   autoload :Scoping
   autoload :Serialization
@@ -39,7 +43,7 @@ module CassandraObject
 
     autoload :AbstractAdapter
     autoload :CassandraAdapter
-    autoload :HstoreAdapter
+    autoload :CassandraSchemalessAdapter
   end
 
   module BelongsTo
@@ -62,6 +66,7 @@ module CassandraObject
     autoload :JsonType
     autoload :StringType
     autoload :TimeType
+    autoload :TypeHelper
   end
 end
 

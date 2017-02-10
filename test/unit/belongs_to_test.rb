@@ -11,6 +11,7 @@ class CassandraObject::BelongsToTest < CassandraObject::TestCase
     string :target_id
     string :target_type
     belongs_to :target, polymorphic: true
+
   end
 
   test 'belongs_to' do
