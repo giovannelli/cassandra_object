@@ -132,8 +132,6 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
   end
 
   test 'type tests' do
-    byebug
-
     issue = IssueSchema.create(title: 'title', description: 'desc', field: 1.5, intero: 10)
     assert_nothing_raised do
       IssueSchema.find(issue.id)

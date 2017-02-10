@@ -48,30 +48,32 @@ module CassandraObject
 
       def cassandra_cluster_options
         cluster_options = config.slice(*[
-            :hosts,
-            :port,
-            :username,
-            :password,
-            :ssl,
-            :server_cert,
+            :auth_provider,
             :client_cert,
-            :private_key,
-            :passphrase,
             :compression,
+            :compressor,
+            :connect_timeout,
+            :connections_per_local_node,
+            :connections_per_remote_node,
+            :consistency,
+            :credentials,
+            :futures_factory,
+            :hosts,
             :load_balancing_policy,
+            :logger,
+            :page_size,
+            :passphrase,
+            :password,
+            :port,
+            :private_key,
+            :protocol_version,
             :reconnection_policy,
             :retry_policy,
-            :consistency,
+            :server_cert,
+            :ssl,
+            :timeout,
             :trace,
-            :page_size,
-            :credentials,
-            :auth_provider,
-            :compressor,
-            :futures_factory,
-            :connect_timeout,
-            :request_timeout,
-            :protocol_version,
-            :logger
+            :username
         ])
 
 
@@ -87,11 +89,11 @@ module CassandraObject
 
         # Setting defaults
         cluster_options.merge!({
-                                   max_schema_agreement_wait: 1,
-                                   consistency: cluster_options[:consistency]||:quorum,
-                                   protocol_version: cluster_options[:protocol_version]||3,
-                                   page_size: cluster_options[:page_size] || 10000
-                               })
+             max_schema_agreement_wait: 1,
+             consistency: cluster_options[:consistency]||:quorum,
+             protocol_version: cluster_options[:protocol_version]||3,
+             page_size: cluster_options[:page_size] || 10000
+         })
         return cluster_options
       end
 
