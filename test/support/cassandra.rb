@@ -4,15 +4,17 @@ CassandraObject::Base.config = {
   keyspace: 'cassandra_object_test',
   hosts: ['127.0.0.1'],
   compression: :lz4,
-  connect_timeout: 0.1,
-  timeout: 1,
+  connect_timeout: 1,
+  timeout: 10,
   consistency: :quorum,
   protocol_version: 3,
   page_size: 10000,
   trace: true,
-  connections_per_local_node: 2,
-  connections_per_remote_node: 2,
-  logger: Logger.new($stderr)
+  connections_per_local_node: 4,
+  schema_refresh_delay: 0.1,
+  schema_refresh_timeout: 0.1
+  # connections_per_remote_node: nil,
+  # logger: Logger.new($stderr)
 }
 
 begin

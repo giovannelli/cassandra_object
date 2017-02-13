@@ -75,6 +75,8 @@ module CassandraObject
           :protocol_version,
           :reconnection_policy,
           :retry_policy,
+          :schema_refresh_delay,
+          :schema_refresh_timeout,
           :server_cert,
           :ssl,
           :timeout,
@@ -179,7 +181,7 @@ module CassandraObject
 
       # SCHEMA
       def create_table(table_name, params = {})
-        stmt = "CREATE TABLE #{table_name}"
+        stmt = "CREATE TABLE #{table_name} "
         if params.any? && !params[:attributes].present?
           raise 'No attributes for the table'
         elsif !params[:attributes].include? 'PRIMARY KEY'
@@ -234,7 +236,7 @@ module CassandraObject
               AND min_index_interval = 128
               AND read_repair_chance = 1.0
               AND speculative_retry = 'NONE';"
-          elsif cassandra_version > 3
+          elsif cassandra_version >= 3
             # AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
             "#{stmt} WITH bloom_filter_fp_chance = 0.001
                 AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}

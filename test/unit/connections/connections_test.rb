@@ -6,40 +6,50 @@ require 'test_helper'
 class CassandraObject::ConnectionsTest < CassandraObject::TestCase
 
   test 'test connections' do
-    issues = []
-    tot_op = 0
-    operations = 0
+    IssueSchema.delete_all
+    ids = []
+    (1..10000).each do
+      i = IssueSchema.create(title: "fadjfjkadhsfkjldsa")
+      ids << i.id
+    end
 
-    tasklist = []
-    # Set the threads going
-    10.times do |n|
-      task = Thread.new(n) { |x|
-        1000.times do
-          issue = Issue.create(title: "#{n} - #{x}")
-          issues << issue.id
-          # sleep 1
-          tot_op += 1
-          operations += 1
+    threads = []
+
+    (0..10).collect do |i|
+
+      # puts "spawn thread #{i}"
+      thr = Thread.new do
+        begin
+          IssueSchema.find(ids.first)
+        rescue Exception => e
+          puts("\n\n\n\n" + e.message)
+
         end
-      }
-      tasklist << task
+      end
+      threads << thr
     end
 
-    n_alive = 1
-    while(n_alive > 0) do
-      n_alive = tasklist.select{|t| t.alive?}.size
-      puts "ops/sec: #{operations} tot ops: #{tot_op}, running threads: #{n_alive}"
-      operations = 0
-      sleep 1
-    end
-
-    # Wait for the threads to finish
-    tasklist.each { |task| task.join }
-
-    # readall
-    puts "issues tot: #{issues.size}"
-
-    byebug
   end
+
+  # test 'test create' do
+  #
+  #   values = []
+  #   threads = []
+  #   (0..100).collect do |i|
+  #
+  #
+  #     puts "spawn thread #{i}"
+  #     thr = Thread.new do
+  #       begin
+  #         values << Issue.new(title: 'title', description: 'desc').search.results.size
+  #       rescue Exception => e
+  #         puts("\n\n\n\n" + e.message)
+  #         retry
+  #       end
+  #     end
+  #     threads << thr
+  #   end
+  #
+  # end
 
 end

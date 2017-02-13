@@ -69,6 +69,8 @@ module CassandraObject
             :protocol_version,
             :reconnection_policy,
             :retry_policy,
+            :schema_refresh_delay,
+            :schema_refresh_timeout,
             :server_cert,
             :ssl,
             :timeout,
@@ -241,7 +243,7 @@ module CassandraObject
                 AND min_index_interval = 128
                 AND read_repair_chance = 1.0
                 AND speculative_retry = 'NONE';"
-          elsif cassandra_version > 3
+          elsif cassandra_version >= 3
             "#{stmt} WITH COMPACT STORAGE
                 AND bloom_filter_fp_chance = 0.001
                 AND CLUSTERING ORDER BY (column1 ASC)

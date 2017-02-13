@@ -5,7 +5,6 @@ class CassandraObject::SchemaTest < CassandraObject::TestCase
   SCHEMA = {attributes: 'key text, text_field text, integer_field int ,float_field float, PRIMARY KEY (key)'}
 
   test 'create_table' do
-
     CassandraObject::Schema.create_table 'TestSchemaRecords', SCHEMA
 
     begin
