@@ -17,8 +17,13 @@ module CassandraObject
         system_execute stmt #adapter.statement_with_options(stmt, options)
       end
 
-      def drop_keyspace(keyspace)
-        system_execute "DROP KEYSPACE #{keyspace}"
+      def drop_keyspace(keyspace, confirm = false)
+        count = (system_schema_execute "SELECT count(*) FROM tables where keyspace_name = '#{keyspace}';").rows.first['count']
+        if confirm || count == 0
+          system_execute "DROP KEYSPACE #{keyspace}"
+        else
+          raise "Cannot drop keyspace #{keyspace}. You must delete all tables before"
+        end
       end
 
       def create_column_family(column_family, options = {})
@@ -38,8 +43,8 @@ module CassandraObject
         drop_table column_family
       end
 
-      def drop_table(table_name)
-        adapter.drop_table table_name
+      def drop_table(table_name, confirm = false)
+        adapter.drop_table table_name, confirm
       end
 
       def add_index(column_family, column, index_name = nil)
@@ -60,6 +65,10 @@ module CassandraObject
 
         def keyspace_execute(cql)
           adapter.schema_execute cql, CassandraObject::Base.config[:keyspace]
+        end
+
+        def system_schema_execute(cql)
+          adapter.schema_execute cql, 'system_schema'
         end
 
         def system_execute(cql)

@@ -20,7 +20,7 @@ class CassandraObject::ConnectionsTest < CassandraObject::TestCase
       # puts "spawn thread #{i}"
       thr = Thread.new do
         begin
-          IssueSchema.find(ids.first)
+          IssueSchema.find(ids)
         rescue Exception => e
           puts("\n\n\n\n" + e.message)
 

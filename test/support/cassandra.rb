@@ -18,7 +18,7 @@ CassandraObject::Base.config = {
 }
 
 begin
-  CassandraObject::Schema.drop_keyspace 'cassandra_object_test'
+  CassandraObject::Schema.drop_keyspace 'cassandra_object_test', true
 rescue Exception => e
   puts e.message
 end
@@ -45,6 +45,8 @@ CassandraObject::Base.class_eval do
   def self.delete_after_test
     # created_records.reject(&:destroyed?).each(&:destroy)
     Issue.delete_all
+    IssueSchema.delete_all
+    IssueDynamic.delete_all
     created_records.clear
   end
 end

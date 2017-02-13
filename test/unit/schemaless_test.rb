@@ -17,6 +17,15 @@ class CassandraObject::SchemalessTest < CassandraObject::TestCase
     assert existing_keyspace
   end
 
+  test 'drop undroppable' do
+    begin
+      CassandraObject::Schemaless.drop_keyspace 'cassandra_object_test'
+    rescue Exception => e
+      assert_equal e.message, 'Cannot drop keyspace cassandra_object_test. You must delete all tables before'
+    ensure
+    end
+  end
+
   test 'create_table' do
 
     CassandraObject::Schemaless.create_table 'TestRecords'
@@ -30,10 +39,32 @@ class CassandraObject::SchemalessTest < CassandraObject::TestCase
   end
 
   test 'drop_table' do
+
+    class TestDrop < CassandraObject::BaseSchemaless
+      self.column_family = 'TestCFToDrop'
+    end
+
     CassandraObject::Schemaless.create_table 'TestCFToDrop'
+    TestDrop.create
+    # test drop with record
+    begin
+      CassandraObject::Schemaless.drop_table 'TestCFToDrop'
+    rescue Exception => e
+      assert_equal e.message, 'The table TestCFToDrop is not empty! If you want to drop it add the option confirm = true'
+    end
 
+    # test drop with confirm
+    CassandraObject::Schemaless.drop_table 'TestCFToDrop', true
+    begin
+      CassandraObject::Schemaless.drop_table 'TestCFToDrop'
+      assert false, 'TestCFToDrop should not exist'
+    rescue Exception => e
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testcftodrop'
+    end
+
+    CassandraObject::Schemaless.create_table 'TestCFToDrop'
+    # drop empty
     CassandraObject::Schemaless.drop_table 'TestCFToDrop'
-
     begin
       CassandraObject::Schemaless.drop_table 'TestCFToDrop'
       assert false, 'TestCFToDrop should not exist'

@@ -198,8 +198,13 @@ module CassandraObject
         schema_execute statement_with_options(stmt, params[:options]), config[:keyspace]
       end
 
-      def drop_table(table_name)
-        schema_execute "DROP TABLE #{table_name}", config[:keyspace]
+      def drop_table(table_name, confirm = false)
+        count = (connection.execute "SELECT count(*) FROM #{table_name}").rows.first['count']
+        if confirm || count == 0
+          schema_execute "DROP TABLE #{table_name}", config[:keyspace]
+        else
+          raise "The table #{table_name} is not empty! If you want to drop it add the option confirm = true"
+        end
       end
 
       def schema_execute(cql, keyspace)
