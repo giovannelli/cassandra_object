@@ -39,37 +39,40 @@ class CassandraObject::SchemalessTest < CassandraObject::TestCase
   end
 
   test 'drop_table' do
-
     class TestDrop < CassandraObject::BaseSchemaless
-      self.column_family = 'TestCFToDrop'
+      self.column_family = 'TestCFToDrop1'
     end
 
-    CassandraObject::Schemaless.create_table 'TestCFToDrop'
+    CassandraObject::Schemaless.create_table 'TestCFToDrop1'
     TestDrop.create
-    # test drop with record
     begin
-      CassandraObject::Schemaless.drop_table 'TestCFToDrop'
+      CassandraObject::Schemaless.drop_table 'TestCFToDrop1'
     rescue Exception => e
-      assert_equal e.message, 'The table TestCFToDrop is not empty! If you want to drop it add the option confirm = true'
+      assert_equal e.message, 'The table TestCFToDrop1 is not empty! If you want to drop it add the option confirm = true'
     end
+  end
 
-    # test drop with confirm
-    CassandraObject::Schemaless.drop_table 'TestCFToDrop', true
+  test 'drop with confirm' do
+    CassandraObject::Schemaless.create_table 'TestCFToDrop2'
+
+    CassandraObject::Schemaless.drop_table 'TestCFToDrop2', true
     begin
-      CassandraObject::Schemaless.drop_table 'TestCFToDrop'
-      assert false, 'TestCFToDrop should not exist'
+      CassandraObject::Schemaless.drop_table 'TestCFToDrop2'
+      assert false, 'TestCFToDrop2 should not exist'
     rescue Exception => e
-      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testcftodrop'
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testcftodrop2'
     end
+  end
 
-    CassandraObject::Schemaless.create_table 'TestCFToDrop'
-    # drop empty
-    CassandraObject::Schemaless.drop_table 'TestCFToDrop'
+  test 'drop empty' do
+    CassandraObject::Schemaless.create_table 'TestCFToDrop3'
+
+    CassandraObject::Schemaless.drop_table 'TestCFToDrop3'
     begin
-      CassandraObject::Schemaless.drop_table 'TestCFToDrop'
-      assert false, 'TestCFToDrop should not exist'
+      CassandraObject::Schemaless.drop_table 'TestCFToDrop3'
+      assert false, 'TestCFToDrop3 should not exist'
     rescue Exception => e
-      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testcftodrop'
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testcftodrop3'
     end
   end
 

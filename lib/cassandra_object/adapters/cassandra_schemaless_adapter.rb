@@ -199,7 +199,7 @@ module CassandraObject
       end
 
       def drop_table(table_name, confirm = false)
-        count = (connection.execute "SELECT count(*) FROM #{table_name}").rows.first['count']
+        count = (schema_execute "SELECT count(*) FROM #{table_name}", config[:keyspace]).rows.first['count']
         if confirm || count == 0
           schema_execute "DROP TABLE #{table_name}", config[:keyspace]
         else
@@ -248,7 +248,7 @@ module CassandraObject
                 AND min_index_interval = 128
                 AND read_repair_chance = 1.0
                 AND speculative_retry = 'NONE';"
-          elsif cassandra_version >= 3
+          else
             "#{stmt} WITH COMPACT STORAGE
                 AND bloom_filter_fp_chance = 0.001
                 AND CLUSTERING ORDER BY (column1 ASC)

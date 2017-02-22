@@ -19,6 +19,7 @@ CassandraObject::Base.config = {
 
 begin
   CassandraObject::Schema.drop_keyspace 'cassandra_object_test', true
+  CassandraObject::Schema.drop_keyspace 'blah', true
 rescue Exception => e
   puts e.message
 end

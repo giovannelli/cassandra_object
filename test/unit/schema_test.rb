@@ -40,49 +40,55 @@ class CassandraObject::SchemaTest < CassandraObject::TestCase
   end
 
   test 'drop_table' do
-    CassandraObject::Schema.create_table 'TestSchemaCFToDrop', SCHEMA
+    CassandraObject::Schema.create_table 'TestSchemaCFToDrop1', SCHEMA
 
-    CassandraObject::Schema.drop_table 'TestSchemaCFToDrop'
+    CassandraObject::Schema.drop_table 'TestSchemaCFToDrop1'
 
     begin
-      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop'
-      assert false, 'TestSchemaCFToDrop should not exist'
+      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop1'
+      assert false, 'TestSchemaCFToDrop1 should not exist'
     rescue Exception => e
-      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testschemacftodrop'
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testschemacftodrop1'
     end
+  end
 
+  test 'test drop with record' do
     class TestDrop < CassandraObject::BaseSchema
-      self.column_family = 'TestSchemaCFToDrop'
+      self.column_family = 'TestSchemaCFToDrop2'
     end
 
-    CassandraObject::Schema.create_table 'TestSchemaCFToDrop', SCHEMA
+    CassandraObject::Schema.create_table 'TestSchemaCFToDrop2', SCHEMA
     TestDrop.create
-    # test drop with record
-    begin
-      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop'
-    rescue Exception => e
-      assert_equal e.message, 'The table TestSchemaCFToDrop is not empty! If you want to drop it add the option confirm = true'
-    end
 
-    # test drop with confirm
-    CassandraObject::Schema.drop_table 'TestSchemaCFToDrop', true
     begin
-      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop'
+      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop2'
+    rescue Exception => e
+      assert_equal e.message, 'The table TestSchemaCFToDrop2 is not empty! If you want to drop it add the option confirm = true'
+    end
+  end
+
+  test 'test drop with confirm' do
+    CassandraObject::Schema.create_table 'TestSchemaCFToDrop3', SCHEMA
+
+    CassandraObject::Schema.drop_table 'TestSchemaCFToDrop3', true
+    begin
+      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop3'
       assert false, 'TestSchemaCFToDrop should not exist'
     rescue Exception => e
-      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testschemacftodrop'
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testschemacftodrop3'
     end
+  end
 
-    CassandraObject::Schema.create_table 'TestSchemaCFToDrop', SCHEMA
+  test 'test drop empty' do
+    CassandraObject::Schema.create_table 'TestSchemaCFToDrop4', SCHEMA
     # drop empty
-    CassandraObject::Schema.drop_table 'TestSchemaCFToDrop'
+    CassandraObject::Schema.drop_table 'TestSchemaCFToDrop4'
     begin
-      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop'
-      assert false, 'TestSchemaCFToDrop should not exist'
+      CassandraObject::Schema.drop_table 'TestSchemaCFToDrop4'
+      assert false, 'TestSchemaCFToDrop4 should not exist'
     rescue Exception => e
-      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testschemacftodrop'
+      assert_equal e.message.gsub('columnfamily', 'table'), 'unconfigured table testschemacftodrop4'
     end
-
   end
 
   test 'create_index' do

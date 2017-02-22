@@ -18,7 +18,11 @@ module CassandraObject
       end
 
       def drop_keyspace(keyspace, confirm = false)
-        count = (system_schema_execute "SELECT count(*) FROM tables where keyspace_name = '#{keyspace}';").rows.first['count']
+        if adapter.cassandra_version < 3
+          count = (system_execute "SELECT count(*) FROM schema_columnfamilies where keyspace_name = '#{keyspace}' ALLOW FILTERING;").rows.first['count']
+        else
+          count = (system_schema_execute "SELECT count(*) FROM tables where keyspace_name = '#{keyspace}';").rows.first['count']
+        end
         if confirm || count == 0
           system_execute "DROP KEYSPACE #{keyspace}"
         else
@@ -34,7 +38,7 @@ module CassandraObject
         adapter.create_table table_name, options
       end
 
-      def alter_column_family(column_family, instruction, options = '')
+      def alter_column_family(column_family, instruction, options = {})
         stmt = "ALTER TABLE #{column_family} #{instruction}"
         keyspace_execute adapter.statement_with_options(stmt, options)
       end

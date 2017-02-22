@@ -38,19 +38,7 @@ module CassandraObject
           end
         end
 
-        # def limit_string
-        #   if @scope.limit_value
-        #     "LIMIT #{@scope.limit_value}"
-        #   else
-        #     ""
-        #   end
-        # end
-
       end
-
-      # def primary_key_column
-      #   @scope.keys.tr('()','')
-      # end
 
       def cassandra_cluster_options
         cluster_options = config.slice(*[
@@ -194,7 +182,7 @@ module CassandraObject
       end
 
       def drop_table(table_name, confirm = false)
-        count = (connection.execute "SELECT count(*) FROM #{table_name}").rows.first['count']
+        count = (schema_execute "SELECT count(*) FROM #{table_name}", config[:keyspace]).rows.first['count']
         if confirm || count == 0
           schema_execute "DROP TABLE #{table_name}", config[:keyspace]
         else
@@ -241,7 +229,7 @@ module CassandraObject
               AND min_index_interval = 128
               AND read_repair_chance = 1.0
               AND speculative_retry = 'NONE';"
-          elsif cassandra_version >= 3
+          else
             # AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
             "#{stmt} WITH bloom_filter_fp_chance = 0.001
                 AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
