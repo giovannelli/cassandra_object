@@ -14,8 +14,8 @@ module CassandraObject
 
         def to_query
           [
-            "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-            where_string
+              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+              where_string
           ].delete_if(&:blank?) * ' '
         end
 
@@ -42,34 +42,34 @@ module CassandraObject
 
       def cassandra_cluster_options
         cluster_options = config.slice(*[
-          :auth_provider,
-          :client_cert,
-          :compression,
-          :compressor,
-          :connect_timeout,
-          :connections_per_local_node,
-          :connections_per_remote_node,
-          :consistency,
-          :credentials,
-          :futures_factory,
-          :hosts,
-          :load_balancing_policy,
-          :logger,
-          :page_size,
-          :passphrase,
-          :password,
-          :port,
-          :private_key,
-          :protocol_version,
-          :reconnection_policy,
-          :retry_policy,
-          :schema_refresh_delay,
-          :schema_refresh_timeout,
-          :server_cert,
-          :ssl,
-          :timeout,
-          :trace,
-          :username
+            :auth_provider,
+            :client_cert,
+            :compression,
+            :compressor,
+            :connect_timeout,
+            :connections_per_local_node,
+            :connections_per_remote_node,
+            :consistency,
+            :credentials,
+            :futures_factory,
+            :hosts,
+            :load_balancing_policy,
+            :logger,
+            :page_size,
+            :passphrase,
+            :password,
+            :port,
+            :private_key,
+            :protocol_version,
+            :reconnection_policy,
+            :retry_policy,
+            :schema_refresh_delay,
+            :schema_refresh_timeout,
+            :server_cert,
+            :ssl,
+            :timeout,
+            :trace,
+            :username
         ])
 
         {
@@ -84,10 +84,10 @@ module CassandraObject
 
         # Setting defaults
         cluster_options.merge!({
-          consistency: cluster_options[:consistency] || :quorum,
-          protocol_version: cluster_options[:protocol_version] || 3,
-          page_size: cluster_options[:page_size] || 10000
-        })
+                                   consistency: cluster_options[:consistency] || :quorum,
+                                   protocol_version: cluster_options[:protocol_version] || 3,
+                                   page_size: cluster_options[:page_size] || 10000
+                               })
         return cluster_options
       end
 
@@ -102,7 +102,7 @@ module CassandraObject
       def execute(statement, arguments = [])
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           type_hints = []
-          arguments.map{|a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } if !arguments.nil?
+          arguments.map { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } if !arguments.nil?
           connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: consistency, page_size: config[:page_size]
         end
       end
@@ -216,7 +216,7 @@ module CassandraObject
         else
           # standard
           if cassandra_version < 3
-          "#{stmt} WITH bloom_filter_fp_chance = 0.001
+            "#{stmt} WITH bloom_filter_fp_chance = 0.001
               AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
               AND comment = ''
               AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
@@ -230,20 +230,20 @@ module CassandraObject
               AND read_repair_chance = 1.0
               AND speculative_retry = 'NONE';"
           else
-            # AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
-            "#{stmt} WITH bloom_filter_fp_chance = 0.001
-                AND caching = {'keys':'ALL', 'rows_per_partition':'NONE'}
-                AND comment = ''
-                AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
-                AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
-                AND dclocal_read_repair_chance = 0.0
-                AND default_time_to_live = 0
-                AND gc_grace_seconds = 864000
-                AND max_index_interval = 2048
-                AND memtable_flush_period_in_ms = 0
-                AND min_index_interval = 128
-                AND read_repair_chance = 1.0
-                AND speculative_retry = 'NONE';"
+            "#{stmt} WITH read_repair_chance = 0.0
+              AND dclocal_read_repair_chance = 0.1
+              AND gc_grace_seconds = 864000
+              AND bloom_filter_fp_chance = 0.01
+              AND caching = { 'keys' : 'ALL', 'rows_per_partition' : 'NONE' }
+              AND comment = ''
+              AND compaction = { 'class' : 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold' : 32, 'min_threshold' : 4 }
+              AND compression = { 'chunk_length_in_kb' : 64, 'class' : 'org.apache.cassandra.io.compress.LZ4Compressor' }
+              AND default_time_to_live = 0
+              AND speculative_retry = '99PERCENTILE'
+              AND min_index_interval = 128
+              AND max_index_interval = 2048
+              AND crc_check_chance = 1.0;
+            "
           end
         end
       end
