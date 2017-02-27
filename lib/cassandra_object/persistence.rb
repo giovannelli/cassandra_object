@@ -69,6 +69,7 @@ module CassandraObject
       end
 
       def update_record(id, attributes)
+        return if attributes.empty?
         if self.schema_type == :standard
           attributes[self._key] = id
           id = self._key
