@@ -12,7 +12,7 @@ CassandraObject::Base.config = {
   trace: true,
   connections_per_local_node: 4,
   schema_refresh_delay: 0.1,
-  schema_refresh_timeout: 0.1
+  schema_refresh_timeout: 0.1,
   # connections_per_remote_node: nil,
   # logger: Logger.new($stderr)
 }

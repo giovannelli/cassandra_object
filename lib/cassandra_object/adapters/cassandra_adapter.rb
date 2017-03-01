@@ -12,13 +12,6 @@ module CassandraObject
           @scope = scope
         end
 
-        def to_query
-          [
-              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-              where_string
-          ].delete_if(&:blank?) * ' '
-        end
-
         def select_string
           if @scope.select_values.any?
             (['KEY'] | @scope.select_values) * ','
@@ -27,15 +20,30 @@ module CassandraObject
           end
         end
 
-        def where_string
-          wheres = @scope.where_values.dup
-          if @scope.id_values.any?
-            wheres << @adapter.create_ids_where_clause(@scope)
+        def to_query_async
+          # empty ids
+          if @scope.id_values.empty?
+            str = [
+                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+                where_string_async(nil)
+            ]
+            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            return [] << str.delete_if(&:blank?) * ' '
           end
+          @scope.id_values.map { |id|
+            str = [
+                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+                where_string_async(id)
+            ]
+            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            str.delete_if(&:blank?) * ' '
+          }
+        end
 
-          if wheres.any?
-            "WHERE #{wheres * ' AND '}"
-          end
+        def where_string_async(id)
+          wheres = @scope.where_values.dup
+          wheres << "#{@scope._key} = '#{id}'" if !id.nil?
+          "WHERE #{wheres * ' AND '}" if wheres.any?
         end
 
       end
@@ -107,15 +115,22 @@ module CassandraObject
         end
       end
 
-      def select(scope)
-        statement = QueryBuilder.new(self, scope).to_query
-
-        # TODO FIX ON RUBY-DRIVER
-        if scope.id_values.size == 1
-          arguments = scope.id_values
+      def execute_async(queries, arguments = [])
+        futures = queries.map { |q|
+          ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
+            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: config[:page_size]
+          end
+        }
+        futures.map do |future|
+          rows = future.get
+          rows
         end
+      end
 
-        execute(statement, arguments).rows.each do |cql_row|
+      def select(scope)
+        queries = QueryBuilder.new(self, scope).to_query_async
+        cql_rows = execute_async(queries).map{|item| item.rows.map{|x| x}}.flatten!
+        cql_rows.each do |cql_row|
           attributes = cql_row.to_hash
           key = attributes.delete(scope._key)
           yield(key, attributes) unless attributes.empty?
@@ -246,15 +261,6 @@ module CassandraObject
             "
           end
         end
-      end
-
-      def create_ids_where_clause(scope)
-        ids = scope.id_values
-        primary_key_column = scope._key
-        return ids if ids.empty?
-        ids = ids.first if ids.is_a?(Array) && ids.one?
-        sql = ids.is_a?(Array) ? "#{primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})" : "#{primary_key_column} = ?"
-        return sql
       end
 
     end

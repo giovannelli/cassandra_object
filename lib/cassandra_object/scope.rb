@@ -50,19 +50,14 @@ module CassandraObject
       else
         primary_key_column = klass.adapter.primary_key_column
 
-        page = klass.adapter.select(self)
-        # pagination
-        loop do
-          page.rows.each do |cql_row|
-            h = Hash.new
-            attributes = cql_row.to_hash
-            key = attributes.delete(primary_key_column)
-            h[attributes.values[0]] = attributes.values[1]
-            records[key] = (records[key]||{}).merge(h)
-          end
-          break if page.last_page?
-          page = page.next_page
+        klass.adapter.select(self).each do |cql_row|
+          h = Hash.new
+          attributes = cql_row.to_hash
+          key = attributes.delete(primary_key_column)
+          h[attributes.values[0]] = attributes.values[1]
+          records[key] = (records[key]||{}).merge(h)
         end
+
       end
       # limit
       records = records.first(@limit_value) if @limit_value.present?
