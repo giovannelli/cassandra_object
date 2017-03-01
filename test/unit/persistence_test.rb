@@ -260,7 +260,8 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
       issues << issue
     end
 
-    found = Issue.find(issues.map{|x| x[:id]})
+    ids = issues.map{|x| x.id}
+    found = Issue.find(ids)
 
     assert_equal NUMTEST, found.size
   end
