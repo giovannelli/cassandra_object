@@ -249,21 +249,17 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     assert_equal 2, IssueDynamic.find(id)[id].size
   end
 
-  test 'paged_request' do
+  test 'paged_request_dynamic' do
 
     NUMTEST = 21000
 
-    issues = []
     NUMTEST.times.each do |i|
-      issue = Issue.new
-      issue.save
-      issues << issue
+      rand = rand()
+      IssueDynamic.create(key: 123, rand => rand)
     end
+    found = IssueDynamic.find_by_id(123)
 
-    ids = issues.map{|x| x.id}
-    found = Issue.find(ids)
-
-    assert_equal NUMTEST, found.size
+    assert_equal NUMTEST, found['123'].size
   end
 
 end

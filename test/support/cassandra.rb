@@ -5,7 +5,7 @@ CassandraObject::Base.config = {
   hosts: ['127.0.0.1'],
   compression: :lz4,
   connect_timeout: 1,
-  timeout: 10,
+  timeout: 30,
   consistency: :quorum,
   protocol_version: 3,
   page_size: 10000,
