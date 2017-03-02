@@ -138,7 +138,17 @@ module CassandraObject
         queries = QueryBuilder.new(self, scope).to_query_async
         arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
         arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
-        execute_async(queries, arguments).map{|item| item.rows.map{|x| x}}.flatten!
+        records = execute_async(queries, arguments).map do |item|
+          # pagination
+          elems = []
+          loop do
+            item.rows.map{|x| elems << x}
+            break if item.last_page?
+            item = item.next_page
+          end
+          elems
+        end
+        records.flatten!
       end
 
       def insert(table, id, attributes, ttl = nil)
