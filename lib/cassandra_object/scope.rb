@@ -6,7 +6,7 @@ module CassandraObject
     include FinderMethods, QueryMethods
 
     attr_accessor :klass
-    attr_accessor :limit_value, :select_values, :where_values, :id_values, :raw_response
+    attr_accessor :limit_value, :select_values, :where_values, :id_values, :raw_response, :per_page_value, :page_value
 
     def initialize(klass)
       @klass = klass
@@ -16,6 +16,8 @@ module CassandraObject
       @select_values = []
       @id_values = []
       @where_values = []
+      @per_page_value = nil
+      @page_value = nil
     end
 
     private
@@ -50,7 +52,7 @@ module CassandraObject
       else
         primary_key_column = klass.adapter.primary_key_column
 
-        klass.adapter.select(self).each do |cql_row|
+        klass.adapter.select(self, @per_page_value, @page_value).each do |cql_row|
           h = Hash.new
           attributes = cql_row.to_hash
           key = attributes.delete(primary_key_column)

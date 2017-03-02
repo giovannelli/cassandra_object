@@ -122,10 +122,10 @@ module CassandraObject
         end
       end
 
-      def execute_async(queries, arguments = [])
+      def execute_async(queries, arguments = [], per_page = config[:page_size])
         futures = queries.map { |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: config[:page_size]
+            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: per_page
           end
         }
         futures.map do |future|
@@ -134,17 +134,33 @@ module CassandraObject
         end
       end
 
-      def select(scope, filter = false)
+      def select(scope, per_page = nil, page = nil)
         queries = QueryBuilder.new(self, scope).to_query_async
         arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
         arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
-        records = execute_async(queries, arguments).map do |item|
+        records = execute_async(queries, arguments, per_page).map do |item|
           # pagination
+          #go to page
           elems = []
-          loop do
-            item.rows.map{|x| elems << x}
-            break if item.last_page?
-            item = item.next_page
+          if !page.nil?
+            page_n = 1
+            loop do
+              if page != page_n
+                break if item.last_page?
+                page_n += 1
+                item = item.next_page
+                next
+              end
+              item.rows.map{|x| elems << x}
+              break
+            end
+
+          else
+            loop do
+              item.rows.map{|x| elems << x}
+              break if item.last_page?
+              item = item.next_page
+            end
           end
           elems
         end

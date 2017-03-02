@@ -59,6 +59,24 @@ module CassandraObject
         clone.limit! value
       end
 
+      def per_page(value)
+        clone.per_page! value
+      end
+
+      def per_page!(value)
+        self.per_page_value = value
+        self
+      end
+
+      def page(value)
+        clone.page! value
+      end
+
+      def page!(value)
+        self.page_value = value
+        self
+      end
+
       def to_a
         select_records
       end
