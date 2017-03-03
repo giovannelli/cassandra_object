@@ -249,21 +249,29 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     assert_equal 2, IssueDynamic.find(id)[id].size
   end
 
-  test 'paged_request' do
+  test 'get_certain_page' do
 
-    NUMTEST = 21000
-
-    issues = []
-    NUMTEST.times.each do |i|
-      issue = Issue.new
-      issue.save
-      issues << issue
+    10.times.each do |i|
+      rand = rand()
+      IssueDynamic.create(key: 123098, rand => rand)
     end
 
-    ids = issues.map{|x| x.id}
-    found = Issue.find(ids)
+    page = IssueDynamic.page(2).per_page(3).all
+    assert_equal 3, page.values.first.values.size
+  end
 
-    assert_equal NUMTEST, found.size
+  test 'paged_request_dynamic' do
+
+    NUMTEST = 21000
+    KEY = '987987'
+
+    NUMTEST.times.each do |i|
+      rand = rand()
+      IssueDynamic.create(key: KEY, rand => rand)
+    end
+    found = IssueDynamic.find_by_id(KEY)
+
+    assert_equal NUMTEST, found[KEY].size
   end
 
 end

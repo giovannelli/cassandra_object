@@ -12,17 +12,8 @@ module CassandraObject
           @scope = scope
         end
 
-        def to_query
-          str = [
-              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-              where_string
-          ]
-          str << "ALLOW FILTERING" if @scope.klass.allow_filtering
-          str.delete_if(&:blank?) * ' '
-        end
-
         def select_string
-          selected_values = @scope.select_values.select{ |sv| sv == :column1 || sv == :values }
+          selected_values = @scope.select_values.select { |sv| sv == :column1 || sv == :values }
           if selected_values.any?
             (['KEY'] | selected_values) * ','
           else
@@ -30,12 +21,30 @@ module CassandraObject
           end
         end
 
-        def where_string
-          wheres = []
-          wheres << @adapter.create_ids_where_clause(@scope.id_values)
-          wheres.flatten!
-          conditions = wheres
-          conditions += @scope.select_values.select{ |sv| sv != :column1 }.map{ |sv| 'column1 = ?' }
+        def to_query_async
+          # empty ids
+          if @scope.id_values.empty?
+            str = [
+                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+                where_string_async(nil)
+            ]
+            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            return [] << str.delete_if(&:blank?) * ' '
+          end
+          @scope.id_values.map { |id|
+            str = [
+                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+                where_string_async(id)
+            ]
+            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            str.delete_if(&:blank?) * ' '
+          }
+        end
+
+        def where_string_async(id)
+          conditions = []
+          conditions << "#{@adapter.primary_key_column} = '#{id}'" if !id.nil?
+          conditions += @scope.select_values.select { |sv| sv != :column1 }.map { |sv| 'column1 = ?' }
           conditions += @scope.where_values.select.each_with_index { |_, i| i.even? }
           return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end
@@ -91,11 +100,11 @@ module CassandraObject
 
         # Setting defaults
         cluster_options.merge!({
-             max_schema_agreement_wait: 1,
-             consistency: cluster_options[:consistency]||:quorum,
-             protocol_version: cluster_options[:protocol_version]||3,
-             page_size: cluster_options[:page_size] || 10000
-         })
+                                   max_schema_agreement_wait: 1,
+                                   consistency: cluster_options[:consistency]||:quorum,
+                                   protocol_version: cluster_options[:protocol_version]||3,
+                                   page_size: cluster_options[:page_size] || 10000
+                               })
         return cluster_options
       end
 
@@ -113,17 +122,49 @@ module CassandraObject
         end
       end
 
-      def select(scope, filter = false)
-        statement = QueryBuilder.new(self, scope).to_query
-
-        where_args = scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
-        # TODO FIX ON RUBY-DRIVER
-        if scope.id_values.size > 1
-          arguments = where_args
-        else
-          arguments = scope.id_values + scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s) + where_args
+      def execute_async(queries, arguments = [], per_page = config[:page_size])
+        futures = queries.map { |q|
+          ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
+            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: per_page
+          end
+        }
+        futures.map do |future|
+          rows = future.get
+          rows
         end
-        execute(statement, arguments)
+      end
+
+      def select(scope, per_page = nil, page = nil)
+        queries = QueryBuilder.new(self, scope).to_query_async
+        arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
+        arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
+        records = execute_async(queries, arguments, per_page).map do |item|
+          # pagination
+          #go to page
+          elems = []
+          if !page.nil?
+            page_n = 1
+            loop do
+              if page != page_n
+                break if item.last_page?
+                page_n += 1
+                item = item.next_page
+                next
+              end
+              item.rows.map{|x| elems << x}
+              break
+            end
+
+          else
+            loop do
+              item.rows.map{|x| elems << x}
+              break if item.last_page?
+              item = item.next_page
+            end
+          end
+          elems
+        end
+        records.flatten!
       end
 
       def insert(table, id, attributes, ttl = nil)
@@ -133,22 +174,6 @@ module CassandraObject
       def update(table, id, attributes, ttl = nil)
         write(table, id, attributes, ttl)
       end
-
-      # def write(table, id, attributes, ttl)
-      #   queries = []
-      #   attributes.each do |column, value|
-      #     if value.present?
-      #       query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
-      #       query += " USING TTL #{ttl.to_s}" if ttl.present?
-      #       args = [id.to_s, column.to_s, value.to_s]
-      #
-      #       queries << {query: query, arguments: args}
-      #     else
-      #       queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]} if value.nil?
-      #     end
-      #   end
-      #   execute_batchable(queries)
-      # end
 
       def write(table, id, attributes, ttl)
         queries = []
@@ -172,7 +197,7 @@ module CassandraObject
         ids = [ids] if !ids.is_a?(Array)
         arguments = nil
         arguments = ids if ids.size == 1
-        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}"#.gsub('?', ids.map { |id| "'#{id}'" }.join(','))
+        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}" #.gsub('?', ids.map { |id| "'#{id}'" }.join(','))
         execute(statement, arguments)
       end
 
