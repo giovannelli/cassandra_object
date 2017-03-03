@@ -129,6 +129,7 @@ module CassandraObject
 
       def select(scope)
         queries = QueryBuilder.new(self, scope).to_query_async
+        # todo paginate
         cql_rows = execute_async(queries).map{|item| item.rows.map{|x| x}}.flatten!
         cql_rows.each do |cql_row|
           attributes = cql_row.to_hash

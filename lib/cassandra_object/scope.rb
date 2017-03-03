@@ -51,13 +51,11 @@ module CassandraObject
 
       else
         primary_key_column = klass.adapter.primary_key_column
-
-        klass.adapter.select(self, @per_page_value, @page_value).each do |cql_row|
-          h = Hash.new
-          attributes = cql_row.to_hash
-          key = attributes.delete(primary_key_column)
-          h[attributes.values[0]] = attributes.values[1]
-          records[key] = (records[key]||{}).merge(h)
+        resp = klass.adapter.select(self, @per_page_value, @page_value)
+        resp.each do |cql_row|
+          key = cql_row[primary_key_column]
+          records[key] ||= {}
+          records[key][cql_row.values[1]] = cql_row.values[2]
         end
 
       end
