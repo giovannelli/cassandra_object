@@ -43,6 +43,7 @@ module CassandraObject
 
       def where_ids!(*ids)
         self.id_values += ids.flatten
+        self.id_values.compact
         self
       end
 
