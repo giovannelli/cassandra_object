@@ -23,6 +23,8 @@ module CassandraObject
 
         def to_query_async
           # empty ids
+          return nil if @scope.id_values.present? && @scope.where_values.present?
+
           if @scope.id_values.empty?
             str = [
                 "SELECT #{select_string} FROM #{@scope.klass.column_family}",
@@ -136,6 +138,9 @@ module CassandraObject
 
       def select(scope, per_page = nil, page = nil)
         queries = QueryBuilder.new(self, scope).to_query_async
+        queries.compact! if queries.present?
+        raise 'Find error' if queries.empty?
+
         arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
         arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
         records = execute_async(queries, arguments, per_page).map do |item|
