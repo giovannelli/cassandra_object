@@ -23,7 +23,7 @@ module CassandraObject
 
         def to_query_async
           # empty ids
-          return nil if @scope.id_values.present? && @scope.where_values.present?
+          return nil if !@scope.id_values.present? && !@scope.where_values.present?
 
           if @scope.id_values.empty?
             str = [
