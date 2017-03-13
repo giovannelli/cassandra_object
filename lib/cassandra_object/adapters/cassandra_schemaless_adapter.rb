@@ -23,7 +23,7 @@ module CassandraObject
 
         def to_query_async
           # empty ids
-          return nil if !@scope.id_values.present? && !@scope.where_values.present?
+          return nil if !@scope.id_values.present? && !@scope.where_values.present? && !@scope.is_all
 
           if @scope.id_values.empty?
             str = [
@@ -139,7 +139,7 @@ module CassandraObject
       def select(scope, per_page = nil, page = nil)
         queries = QueryBuilder.new(self, scope).to_query_async
         queries.compact! if queries.present?
-        raise 'Find error' if queries.empty?
+        raise CassandraObject::RecordNotFound if !queries.present?
 
         arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
         arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)

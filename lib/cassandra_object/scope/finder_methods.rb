@@ -16,35 +16,37 @@ module CassandraObject
       end
 
       def all
-         to_a
+        self.is_all = true
+        to_a
       end
 
       def first
+        self.is_all = true
         limit(1).to_a.first
       end
 
       private
 
-        def find_one(id)
-          if id.blank?
-            raise CassandraObject::RecordNotFound, "Couldn't find #{self.name} with key #{id.inspect}"
-          elsif self.schema_type == :dynamic_attributes
-            record = where_ids(id).to_a
-            raise CassandraObject::RecordNotFound if record.empty?
-            record
-          elsif record = where_ids(id).first
-            record
-          else
-            raise CassandraObject::RecordNotFound
-          end
+      def find_one(id)
+        if id.blank?
+          raise CassandraObject::RecordNotFound, "Couldn't find #{self.name} with key #{id.inspect}"
+        elsif self.schema_type == :dynamic_attributes
+          record = where_ids(id).to_a
+          raise CassandraObject::RecordNotFound if record.empty?
+          record
+        elsif record = where_ids(id).first
+          record
+        else
+          raise CassandraObject::RecordNotFound
         end
+      end
 
-        def find_some(ids)
-          ids = ids.flatten
-          return [] if ids.empty?
-          ids = ids.compact.map(&:to_s).uniq
-          where_ids(ids).to_a
-        end
+      def find_some(ids)
+        ids = ids.flatten
+        return [] if ids.empty?
+        ids = ids.compact.map(&:to_s).uniq
+        where_ids(ids).to_a
+      end
     end
   end
 end

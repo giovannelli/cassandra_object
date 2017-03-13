@@ -6,11 +6,12 @@ module CassandraObject
     include FinderMethods, QueryMethods
 
     attr_accessor :klass
-    attr_accessor :limit_value, :select_values, :where_values, :id_values, :raw_response, :per_page_value, :page_value
+    attr_accessor :is_all, :limit_value, :select_values, :where_values, :id_values, :raw_response, :per_page_value, :page_value
 
     def initialize(klass)
       @klass = klass
 
+      @is_all = false
       @limit_value = nil
       @raw_response = nil
       @select_values = []
