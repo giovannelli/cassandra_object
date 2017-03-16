@@ -8,7 +8,7 @@ CassandraObject::Base.config = {
   timeout: 30,
   consistency: :quorum,
   protocol_version: 3,
-  page_size: 100,
+  page_size: 10000,
   trace: true,
   connections_per_local_node: 4,
   schema_refresh_delay: 0.1,

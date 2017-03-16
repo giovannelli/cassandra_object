@@ -69,15 +69,6 @@ module CassandraObject
         self
       end
 
-      def page(value)
-        clone.page! value
-      end
-
-      def page!(value)
-        self.page_value = value
-        self
-      end
-
       def to_a
         select_records
       end

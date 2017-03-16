@@ -13,7 +13,7 @@ class CassandraObject::Scope::QueryMethodsTest < CassandraObject::TestCase
   test 'select with block' do
     foo_issue = Issue.create title: 'foo'
     Issue.create title: 'bar'
-    assert_equal [foo_issue], Issue.all.select { |issue| issue.title == 'foo' }
+    assert_equal [foo_issue], Issue.find_all_in_batches[:results].select { |issue| issue.title == 'foo' }
   end
 
   test 'chaining where with scope' do

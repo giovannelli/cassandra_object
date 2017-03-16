@@ -15,13 +15,14 @@ module CassandraObject
         nil
       end
 
-      def all
-        self.is_all = true
-        to_a
+      def find_all_in_batches(next_cursor = nil)
+        obj = self.clone
+        obj.is_all = true
+        obj.next_cursor = next_cursor
+        obj.to_a
       end
 
       def first
-        self.is_all = true
         limit(1).to_a.first
       end
 

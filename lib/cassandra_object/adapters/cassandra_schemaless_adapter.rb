@@ -23,7 +23,7 @@ module CassandraObject
 
         def to_query_async
           # empty ids
-          return nil if !@scope.id_values.present? && !@scope.where_values.present? && !@scope.is_all
+          return nil if !@scope.id_values.present? && !@scope.where_values.present? && !@scope.is_all && !@scope.limit_value.present?
 
           if @scope.id_values.empty?
             str = [
@@ -124,10 +124,11 @@ module CassandraObject
         end
       end
 
-      def execute_async(queries, arguments = [], per_page = config[:page_size])
+      def execute_async(queries, arguments = [], per_page = nil, next_cursor = nil)
+        per_page ||= config[:page_size]
         futures = queries.map { |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: per_page
+            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: per_page, paging_state: next_cursor
           end
         }
         futures.map do |future|
@@ -136,36 +137,32 @@ module CassandraObject
         end
       end
 
-      def select(scope, per_page = nil, page = nil)
+      def pre_select(scope, per_page = nil, next_cursor = nil)
+        query = "SELECT DISTINCT #{primary_key_column} FROM #{scope.klass.column_family}"
+        ids = []
+        new_next_cursor = nil
+        execute_async([query], nil, per_page, next_cursor).map do |item|
+          # byebug
+          item.rows.map { |x| ids << x[primary_key_column] }
+          new_next_cursor = item.paging_state if !item.last_page?
+        end
+        return {ids: ids, new_next_cursor: new_next_cursor}
+      end
+
+      def select(scope)
         queries = QueryBuilder.new(self, scope).to_query_async
         queries.compact! if queries.present?
         raise CassandraObject::RecordNotFound if !queries.present?
 
         arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
         arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
-        records = execute_async(queries, arguments, per_page).map do |item|
+        records = execute_async(queries, arguments).map do |item|
           # pagination
-          #go to page
           elems = []
-          if !page.nil?
-            page_n = 1
-            loop do
-              if page != page_n
-                break if item.last_page?
-                page_n += 1
-                item = item.next_page
-                next
-              end
-              item.rows.map{|x| elems << x}
-              break
-            end
-
-          else
-            loop do
-              item.rows.map{|x| elems << x}
-              break if item.last_page?
-              item = item.next_page
-            end
+          loop do
+            item.rows.map { |x| elems << x }
+            break if item.last_page?
+            item = item.next_page
           end
           elems
         end
