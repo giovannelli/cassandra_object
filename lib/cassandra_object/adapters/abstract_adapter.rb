@@ -32,7 +32,7 @@ module CassandraObject
       def batch
         @batch_statements = []
         yield
-        execute_batch(@batch_statements) if @batch_statements.any?
+        execute_batch(@batch_statements) if !@batch_statements.nil? && @batch_statements.any?
       ensure
         @batch_statements = nil
       end
