@@ -16,7 +16,6 @@ class CassandraObject::LogSubscriberTest < CassandraObject::TestCase
 
     wait
 
-    assert_equal 1, @logger.logged(:debug).size
     assert_match 'SELECT * FROM Issues', @logger.logged(:debug)[0]
   end
 

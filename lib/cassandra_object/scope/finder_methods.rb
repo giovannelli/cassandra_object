@@ -23,7 +23,7 @@ module CassandraObject
       end
 
       def first
-        return limit(1).find_all_in_batches[:results].first if self.schema_type == :dynamic_attributes
+        return limit(1).find_all_in_batches[:results].first if self.schema_type == :dynamic_attributes || self.schema_type == :schemaless
         limit(1).to_a.first
       end
 
@@ -36,7 +36,7 @@ module CassandraObject
           record = where_ids(id).to_a
           raise CassandraObject::RecordNotFound if record.empty?
           record
-        elsif record = where_ids(id).first
+        elsif record = where_ids(id)[0]
           record
         else
           raise CassandraObject::RecordNotFound
