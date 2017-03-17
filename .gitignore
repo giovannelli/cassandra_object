@@ -2,4 +2,4 @@ Gemfile.lock
 *.gem
 .idea
 .byebug_history
-.ruby_version
+.ruby-version
