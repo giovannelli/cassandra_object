@@ -142,7 +142,6 @@ module CassandraObject
         ids = []
         new_next_cursor = nil
         execute_async([query], nil, per_page, next_cursor).map do |item|
-          # byebug
           item.rows.map { |x| ids << x[primary_key_column] }
           new_next_cursor = item.paging_state if !item.last_page?
         end

@@ -55,12 +55,13 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     iter = 0
     loop do
       iter += 1
-      resp = IssueDynamic.per_page(10).find_all_in_batches(next_cursor)
+      resp = IssueDynamic.limit(10).find_all_in_batches(next_cursor)
       res << resp[:results].map { |key, val| {key: key.to_s }.merge(val) }
       next_cursor = resp[:next_cursor]
       break if next_cursor.nil?
     end
     res.flatten!
+    IssueDynamic.delete(issues.map{|x| x[:key]})
 
     assert_equal issues.size, res.size
   end
@@ -107,5 +108,10 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     # bi parameter
     res = Issue.cql_response.where('column1 < ?', 'poi').to_a
   end
+
+  # test 'limit in first' do
+  #   first_issue = IssueDynamic.create(key: '1', title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+  #   f = IssueDynamic.first
+  # end
 
 end

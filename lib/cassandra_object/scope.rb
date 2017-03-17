@@ -6,7 +6,7 @@ module CassandraObject
     include FinderMethods, QueryMethods
 
     attr_accessor :klass
-    attr_accessor :is_all, :limit_value, :select_values, :where_values, :id_values, :raw_response, :per_page_value, :next_cursor
+    attr_accessor :is_all, :limit_value, :select_values, :where_values, :id_values, :raw_response, :next_cursor
 
     def initialize(klass)
       @klass = klass
@@ -17,7 +17,6 @@ module CassandraObject
       @select_values = []
       @id_values = []
       @where_values = []
-      @per_page_value = nil
       @next_cursor = nil
     end
 
@@ -52,7 +51,7 @@ module CassandraObject
         end
       else
         if @is_all
-          pre = klass.adapter.pre_select(self, @per_page_value, @next_cursor)
+          pre = klass.adapter.pre_select(self, @limit_value, @next_cursor)
           new_next_cursor = pre[:new_next_cursor]
           return {results: [], next_cursor: new_next_cursor} if pre[:ids].empty? # fix last query all if ids is empty
           self.id_values = pre[:ids]

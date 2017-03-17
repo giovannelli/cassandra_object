@@ -23,6 +23,7 @@ module CassandraObject
       end
 
       def first
+        return limit(1).find_all_in_batches[:results].first if self.schema_type == :dynamic_attributes
         limit(1).to_a.first
       end
 
