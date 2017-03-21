@@ -141,7 +141,7 @@ module CassandraObject
         query = "SELECT DISTINCT #{primary_key_column} FROM #{scope.klass.column_family}"
         query << " LIMIT #{scope.limit_value}" if scope.limit_value == 1
         ids = []
-        new_next_cursor = nilg
+        new_next_cursor = nil
         execute_async([query], nil, per_page, next_cursor).map do |item|
           item.rows.map { |x| ids << x[primary_key_column] }
           new_next_cursor = item.paging_state if !item.last_page?
