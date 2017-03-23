@@ -139,6 +139,7 @@ module CassandraObject
 
       def pre_select(scope, per_page = nil, next_cursor = nil)
         query = "SELECT DISTINCT #{primary_key_column} FROM #{scope.klass.column_family}"
+        query << " LIMIT #{scope.limit_value}" if scope.limit_value == 1
         ids = []
         new_next_cursor = nil
         execute_async([query], nil, per_page, next_cursor).map do |item|
