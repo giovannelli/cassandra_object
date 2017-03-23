@@ -10,6 +10,12 @@ module CassandraObject
           str
         end
       end
+      
+      def decode(str)
+        str.force_encoding('UTF-8') if str
+      rescue
+
+      end
 
       def typecast(value)
         value.to_s
