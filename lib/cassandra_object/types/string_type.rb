@@ -12,13 +12,15 @@ module CassandraObject
       end
       
       def decode(str)
-        str.force_encoding('UTF-8') if str
-      rescue
-
+        begin
+          (str.frozen? ? str.dup : str).force_encoding('UTF-8') if str
+        rescue Exception => e
+          str
+        end
       end
 
       def typecast(value)
-        value.to_s
+        value
       end
     end
   end
