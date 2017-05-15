@@ -4,7 +4,7 @@ module CassandraObject
 
       def self.guess_type(object)
 
-        if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.3.4')
+        if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4.0')
           case object
             when ::String then
               Cassandra::Types.varchar
