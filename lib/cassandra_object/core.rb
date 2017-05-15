@@ -44,7 +44,7 @@ module CassandraObject
         if self == Base
           super
         else
-          attr_list = self.attribute_definitions.map do |col, definition| "#{col}: #{definition}" end * ', '
+          attr_list = self.attribute_definitions.map do |col, definition| "#{col}: #{definition.coder.class.to_s}" end * ', '
           "#{super}(#{attr_list.truncate(140 * 1.7337)})"
         end
       end
