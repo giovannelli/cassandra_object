@@ -52,4 +52,14 @@ class CassandraObject::CoreTest < CassandraObject::TestCase
     issue = Issue.create
     assert issue.inspect =~ /^#<Issue id: \"\w+\", created_at: \".+\", updated_at: \".+\", description: \".+\">$/
   end
+
+  test 'inspect schema' do
+    issue = IssueSchema.create(title: 'tit', description: 'desc')
+    assert issue.inspect =~ /^#<IssueSchema id: \"\w+\", title: \".+\", description: \".+\", created_at: \".+\", updated_at: \".+\">$/
+  end
+
+  test 'inspect dynamic' do
+    issue = IssueDynamic.create(key: '1', title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
+    assert issue.inspect =~ /^{:key=>\".+\", :title=>\".+\", :dynamic_field1=>\".+\", :dynamic_field2=>\".+\"}$/
+  end
 end
