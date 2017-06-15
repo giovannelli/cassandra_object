@@ -75,7 +75,7 @@ module CassandraObject
           results << klass.instantiate(key, attributes)
         end
       end
-      results = results.reduce({}, :merge) if self.schema_type == :dynamic_attributes
+      results = results.reduce({}, :merge!) if self.schema_type == :dynamic_attributes
       if @is_all
         return {results: results, next_cursor: new_next_cursor}
       end

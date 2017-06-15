@@ -30,14 +30,14 @@ module CassandraObject
             str << "ALLOW FILTERING" if @scope.klass.allow_filtering
             return [] << str.delete_if(&:blank?) * ' '
           end
-          @scope.id_values.map { |id|
+          @scope.id_values.map do |id|
             str = [
                 "SELECT #{select_string} FROM #{@scope.klass.column_family}",
                 where_string_async(id)
             ]
             str << "ALLOW FILTERING" if @scope.klass.allow_filtering
             str.delete_if(&:blank?) * ' '
-          }
+          end
         end
 
         def where_string_async(id)
@@ -110,17 +110,17 @@ module CassandraObject
       def execute(statement, arguments = [])
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           type_hints = []
-          arguments.map { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } if !arguments.nil?
+          arguments.each { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } unless arguments.nil?
           connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: consistency, page_size: config[:page_size]
         end
       end
 
       def execute_async(queries, arguments = [])
-        futures = queries.map { |q|
+        futures = queries.map do |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
             connection.execute_async q, arguments: arguments, consistency: consistency, page_size: config[:page_size]
           end
-        }
+        end
         futures.map do |future|
           rows = future.get
           rows
@@ -169,7 +169,7 @@ module CassandraObject
 
       def delete(table, key, ids)
         ids = [ids] if !ids.is_a?(Array)
-        statement = "DELETE FROM #{table} WHERE #{key} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+        statement = "DELETE FROM #{table} WHERE #{key} IN (#{ids.map{|id| "'#{id}'"}.join(',')})"
         execute(statement, nil)
       end
 

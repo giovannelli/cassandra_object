@@ -30,17 +30,17 @@ module CassandraObject
                 "SELECT #{select_string} FROM #{@scope.klass.column_family}",
                 where_string_async(nil)
             ]
-            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
             return [] << str.delete_if(&:blank?) * ' '
           end
-          @scope.id_values.map { |id|
+          @scope.id_values.map do |id|
             str = [
                 "SELECT #{select_string} FROM #{@scope.klass.column_family}",
                 where_string_async(id)
             ]
-            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
             str.delete_if(&:blank?) * ' '
-          }
+          end
         end
 
         def where_string_async(id)
@@ -142,9 +142,9 @@ module CassandraObject
         query << " LIMIT #{scope.limit_value}" if scope.limit_value == 1
         ids = []
         new_next_cursor = nil
-        execute_async([query], nil, per_page, next_cursor).map do |item|
-          item.rows.map { |x| ids << x[primary_key_column] }
-          new_next_cursor = item.paging_state if !item.last_page?
+        execute_async([query], nil, per_page, next_cursor).each do |item|
+          item.rows.each { |x| ids << x[primary_key_column] }
+          new_next_cursor = item.paging_state unless item.last_page?
         end
         return {ids: ids, new_next_cursor: new_next_cursor}
       end
@@ -154,13 +154,13 @@ module CassandraObject
         queries.compact! if queries.present?
         raise CassandraObject::RecordNotFound if !queries.present?
 
-        arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
-        arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
+        arguments = scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
+        arguments += scope.where_values.select.each_with_index{ |_, i| i.odd? }.reject{ |c| c.empty? }.map(&:to_s)
         records = execute_async(queries, arguments).map do |item|
           # pagination
           elems = []
           loop do
-            item.rows.map { |x| elems << x }
+            item.rows.each{ |x| elems << x }
             break if item.last_page?
             item = item.next_page
           end
