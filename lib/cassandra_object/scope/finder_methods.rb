@@ -15,16 +15,23 @@ module CassandraObject
         nil
       end
 
+      def find_in_batches(id, next_cursor = nil)
+        obj = self.clone
+        obj.is_all = true
+        obj.next_cursor = next_cursor
+        obj.where_ids(id).execute_paged
+      end
+
       def find_all_in_batches(next_cursor = nil)
         obj = self.clone
         obj.is_all = true
         obj.next_cursor = next_cursor
-        obj.to_a
+        obj.execute
       end
 
       def first
         return limit(1).find_all_in_batches[:results].first if self.schema_type == :dynamic_attributes || self.schema_type == :schemaless
-        limit(1).to_a.first
+        limit(1).execute.first
       end
 
       private
@@ -33,7 +40,7 @@ module CassandraObject
         if id.blank?
           raise CassandraObject::RecordNotFound, "Couldn't find #{self.name} with key #{id.inspect}"
         elsif self.schema_type == :dynamic_attributes
-          record = where_ids(id).to_a
+          record = where_ids(id).execute
           raise CassandraObject::RecordNotFound if record.empty?
           record
         elsif record = where_ids(id)[0]
@@ -47,7 +54,7 @@ module CassandraObject
         ids = ids.flatten
         return [] if ids.empty?
         ids = ids.compact.map(&:to_s).uniq
-        where_ids(ids).to_a
+        where_ids(ids).execute
       end
     end
   end

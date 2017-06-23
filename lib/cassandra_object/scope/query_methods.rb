@@ -21,7 +21,7 @@ module CassandraObject
 
       def select(*values, &block)
         if block_given?
-          to_a.select(&block)
+          execute.select(&block)
         else
           clone.select!(*values)
         end
@@ -60,8 +60,12 @@ module CassandraObject
         clone.limit! value
       end
 
-      def to_a
+      def execute
         select_records
+      end
+
+      def execute_paged
+        select_records(false)
       end
 
     end

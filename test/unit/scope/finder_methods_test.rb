@@ -39,9 +39,31 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     second_issue = IssueDynamic.create(key: '2', title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
     res = IssueDynamic.find_all_in_batches
     reobjected = res[:results].map { |key, val| {key: key }.merge(val) }
+    IssueDynamic.delete(['1', '2'])
 
     assert_equal [first_issue, second_issue].size, reobjected.size
   end
+
+  test 'find by key in batches dynamic paged' do
+    100.times.each do |i|
+      IssueDynamic.create(key: '1', title: 'tit', "dynamic_field_#{i}" => ['a'])
+      IssueDynamic.create(key: '2', title: 'tit', "dynamic_field_#{i}" => ['a'])
+    end
+
+    resp = IssueDynamic.limit(10).find_in_batches('1')
+    columns = resp[:results]['1']
+    assert_equal 10, columns.size
+    assert_equal 'dynamic_field_0', columns.keys.first
+
+    cursor = resp[:next_cursor]
+    resp = IssueDynamic.limit(10).find_in_batches('1', cursor)
+    columns = resp[:results]['1']
+    assert_equal 10, columns.size
+    assert_equal 'dynamic_field_18', columns.keys.first
+
+    IssueDynamic.delete(['1', '2'])
+  end
+
 
   test 'find all in batches dynamic paged' do
 
@@ -104,9 +126,9 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
   test 'where' do
     # todo make better tests
     # mono parameter
-    res1 = Issue.cql_response.where("column1 < 'poi'").to_a
+    res1 = Issue.cql_response.where("column1 < 'poi'").execute
     # bi parameter
-    res = Issue.cql_response.where('column1 < ?', 'poi').to_a
+    res = Issue.cql_response.where('column1 < ?', 'poi').execute
   end
 
   # test 'limit in first' do

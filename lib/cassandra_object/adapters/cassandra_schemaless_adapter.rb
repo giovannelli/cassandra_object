@@ -166,7 +166,23 @@ module CassandraObject
           end
           elems
         end
-        records.flatten!
+        {results: records.flatten!}
+      end
+
+      def select_paginated(scope)
+        queries = QueryBuilder.new(self, scope).to_query_async
+        queries.compact! if queries.present?
+        raise CassandraObject::RecordNotFound if !queries.present?
+
+        arguments = scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
+        arguments += scope.where_values.select.each_with_index{ |_, i| i.odd? }.reject{ |c| c.empty? }.map(&:to_s)
+        new_next_cursor = nil
+        records = []
+        execute_async(queries, arguments, scope.limit_value, scope.next_cursor).each do |item|
+          new_next_cursor = item.paging_state unless item.last_page?
+          item.rows.each{ |x| records << x }
+        end
+        return {results: records, new_next_cursor: new_next_cursor}
       end
 
       def insert(table, id, attributes, ttl = nil)

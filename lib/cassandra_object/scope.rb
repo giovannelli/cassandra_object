@@ -34,13 +34,13 @@ module CassandraObject
       if klass.respond_to?(method_name)
         scoping { klass.send(method_name, *args, &block) }
       elsif Array.method_defined?(method_name)
-        to_a.send(method_name, *args, &block)
+        execute.send(method_name, *args, &block)
       else
         super
       end
     end
 
-    def select_records
+    def select_records(auto_paginate = true)
       results = []
       records = {}
       new_next_cursor = nil
@@ -50,24 +50,25 @@ module CassandraObject
           records[key] = attributes
         end
       else
-        if @is_all
+        if @is_all && @id_values.empty?
           pre = klass.adapter.pre_select(self, @limit_value, @next_cursor)
-          new_next_cursor = pre[:new_next_cursor]
+          new_next_cursor ||= pre[:new_next_cursor]
           return {results: [], next_cursor: new_next_cursor} if pre[:ids].empty? # fix last query all if ids is empty
-          self.id_values = pre[:ids]
+          @id_values = pre[:ids]
         end
 
-        resp = klass.adapter.select(self)
+        resp = auto_paginate ? klass.adapter.select(self) : klass.adapter.select_paginated(self)
         primary_key_column = klass.adapter.primary_key_column
-        resp.each do |cql_row|
+        new_next_cursor ||= resp[:new_next_cursor]
+        resp[:results].each do |cql_row|
           key = cql_row[primary_key_column]
           records[key] ||= {}
           records[key][cql_row.values[1]] = cql_row.values[2]
         end
-
       end
-      # limit
+
       records = records.first(@limit_value) if @limit_value.present?
+
       records.each do |key, attributes|
         if self.raw_response || self.schema_type == :dynamic_attributes
           results << {key => attributes.values.compact.empty? ? attributes.keys : attributes}
@@ -78,8 +79,9 @@ module CassandraObject
       results = results.reduce({}, :merge!) if self.schema_type == :dynamic_attributes
       if @is_all
         return {results: results, next_cursor: new_next_cursor}
+      else
+        return results
       end
-      return results
     end
 
   end
