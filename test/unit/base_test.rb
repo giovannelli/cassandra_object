@@ -17,4 +17,10 @@ class CassandraObject::BaseTest < CassandraObject::TestCase
     assert_equal 'CassandraObject::BaseTest::Sons', Son.column_family
     assert_equal 'CassandraObject::BaseTest::Sons', Grandson.column_family
   end
+
+  test 'custom cassandra configuration' do
+    assert_equal IssueCustomConfig.config, IssueCustomConfig.custom_config
+    assert_not_equal CassandraObject::Base.config, IssueCustomConfig.config
+  end
+
 end

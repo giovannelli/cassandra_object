@@ -113,6 +113,21 @@ class Widget < CassandraObject::BaseSchema
   end
 end
 ```
+### Custom config
+
+You can define a custom configuration for the cassandra connection, allowing you to have multiple cassandra endpoints fromt he same application
+
+```ruby
+class Widget < CassandraObject::BaseSchema
+  string :name
+  
+  def self.custom_config
+    #return custom cassandra configuration  
+    { }
+  end
+end
+```
+ 
 ## Using with Cassandra
   
 Add a config/cassandra.yml:

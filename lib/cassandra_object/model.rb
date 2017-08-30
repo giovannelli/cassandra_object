@@ -17,6 +17,7 @@ module CassandraObject
     end
 
     def config
+      return self.custom_config if self.methods(false).include?(:custom_config)
       @@config
     end
 
