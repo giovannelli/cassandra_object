@@ -29,6 +29,7 @@ CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schemaless.create_column_family 'Issues'
 CassandraObject::Schema.create_column_family 'IssueSchemas', {attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
 CassandraObject::Schemaless.create_column_family 'IssueDynamics'
+CassandraObject::Schemaless.create_column_family 'IssuesCustomConfig'
 CassandraObject::Schema.create_column_family 'IssueSchemaFathers', {attributes: 'id text, title text, field float, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
 CassandraObject::Schema.create_column_family 'IssueSchemaChildren', {attributes: 'id text, title text, description text, field float, created_at timestamp, updated_at timestamp, issue_schema_father_id text, PRIMARY KEY (id)', options: {}}
 CassandraObject::BaseSchemaless.adapter.consistency = :quorum
