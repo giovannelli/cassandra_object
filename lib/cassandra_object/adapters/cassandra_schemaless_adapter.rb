@@ -46,7 +46,11 @@ module CassandraObject
         def where_string_async(id)
           conditions = []
           conditions << "#{@adapter.primary_key_column} = '#{id}'" if !id.nil?
-          conditions += @scope.select_values.select { |sv| sv != :column1 }.map { |sv| 'column1 = ?' }
+          select_values = @scope.select_values.select { |sv| sv != :column1 }
+          if select_values.size > 0
+            select_str = select_values.size > 1 ? "column1 IN (#{select_values.map { |sv| '?' }.join(',')})" : 'column1 = ?'
+            conditions << select_str
+          end
           conditions += @scope.where_values.select.each_with_index { |_, i| i.even? }
           return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end

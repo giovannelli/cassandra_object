@@ -10,6 +10,15 @@ class CassandraObject::Scope::QueryMethodsTest < CassandraObject::TestCase
     assert_nil found_issue.description
   end
 
+  test 'multi select' do
+    original_issue = Issue.create title: 'foo', description: 'bar'
+    found_issue =  Issue.select(:title, :description).find(original_issue.id)
+
+    assert_equal 'foo', found_issue.title
+    assert_equal 'bar', found_issue.description
+    assert_equal original_issue.id, found_issue.id
+  end
+
   test 'select with block' do
     foo_issue = Issue.create title: 'foo'
     Issue.create title: 'bar'
