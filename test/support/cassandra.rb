@@ -55,6 +55,11 @@ end
 
 module ActiveSupport
   class TestCase
+
+    def after_setup
+      CassandraObject::Base.created_records.clear if CassandraObject::Base.created_records.any?
+    end
+
     teardown do
       if CassandraObject::Base.created_records.any?
         CassandraObject::Base.delete_after_test
