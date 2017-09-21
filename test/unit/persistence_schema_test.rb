@@ -118,17 +118,16 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
   end
 
   test 'ttl' do
-    issue = IssueSchema.create(title: 'I rule', description: 'lololol', ttl: 1)
+    description_test = 'this is the one with ttl'
+    issue = IssueSchema.create(title: 'I rule', description: description_test, ttl: 1)
     assert_nothing_raised do
       IssueSchema.find(issue.id)
     end
-
     sleep 2
-
-    assert_raise CassandraObject::RecordNotFound do
-      IssueSchema.find(issue.id)
+    issue = IssueSchema.find(issue.id) rescue nil
+    unless issue.nil?
+      assert_not_equal issue.description, description_test
     end
-
   end
 
   test 'type tests' do
