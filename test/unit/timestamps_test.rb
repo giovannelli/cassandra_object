@@ -4,8 +4,8 @@ class CassandraObject::TimestampsTest < CassandraObject::TestCase
   test 'timestamps set on create' do
     issue = Issue.create
 
-    assert_in_delta Time.now.to_i, issue.created_at.to_i, 3
-    assert_in_delta Time.now.to_i, issue.updated_at.to_i, 3
+    assert_in_delta Time.now.to_i, issue.created_at.to_i, 10
+    assert_in_delta Time.now.to_i, issue.updated_at.to_i, 10
   end
 
   test 'updated_at set on change' do
@@ -15,7 +15,7 @@ class CassandraObject::TimestampsTest < CassandraObject::TestCase
     issue.description = 'lol'
     issue.save
 
-    assert_in_delta Time.now.to_i, issue.updated_at.to_i, 3
+    assert_in_delta Time.now.to_i, issue.updated_at.to_i, 10
   end
 
   test 'created_at sets only if nil' do

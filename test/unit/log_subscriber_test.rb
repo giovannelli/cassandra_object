@@ -16,7 +16,7 @@ class CassandraObject::LogSubscriberTest < CassandraObject::TestCase
 
     wait
 
-    assert_match 'SELECT * FROM Issues', @logger.logged(:debug)[0]
+    assert_match 'SELECT * FROM Issues', @logger.logged(:debug).last
   end
 
   def test_initializes_runtime
