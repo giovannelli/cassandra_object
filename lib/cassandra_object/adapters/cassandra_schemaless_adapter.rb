@@ -95,6 +95,8 @@ module CassandraObject
 
 
         {
+            heartbeat_interval:    2,
+            idle_timeout:          5,
             load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
             reconnection_policy: 'Cassandra::Reconnection::Policies::%s',
             retry_policy: 'Cassandra::Retry::Policies::%s'
