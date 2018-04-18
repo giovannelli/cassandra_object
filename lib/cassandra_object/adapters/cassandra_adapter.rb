@@ -77,26 +77,33 @@ module CassandraObject
             :ssl,
             :timeout,
             :trace,
-            :username
+            :username,
+            :heartbeat_interval,
+            :idle_timeout
         ])
 
         {
-            heartbeat_interval:    2,
-            idle_timeout:          5,
             load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
             reconnection_policy: 'Cassandra::Reconnection::Policies::%s',
             retry_policy: 'Cassandra::Retry::Policies::%s'
         }.each do |policy_key, class_template|
-          if cluster_options[policy_key]
-            cluster_options[policy_key] = (class_template % [policy_key.classify]).constantize
+          params = cluster_options[policy_key]
+          if params
+            if params.is_a?(Hash)
+              cluster_options[policy_key] = (class_template % [params[:policy].classify]).constantize.new(*params[:params]||[])
+            else
+              cluster_options[policy_key] = (class_template % [params.classify]).constantize.new
+            end
           end
         end
 
         # Setting defaults
         cluster_options.merge!({
-                                   consistency: cluster_options[:consistency] || :quorum,
-                                   protocol_version: cluster_options[:protocol_version] || 3,
-                                   page_size: cluster_options[:page_size] || 10000
+                                heartbeat_interval: cluster_options[:heartbeat_interval] || 2,
+                                idle_timeout: cluster_options[:idle_timeout] || 5,
+                                consistency: cluster_options[:consistency] || :quorum,
+                                protocol_version: cluster_options[:protocol_version] || 3,
+                                page_size: cluster_options[:page_size] || 10000
                                })
         return cluster_options
       end
