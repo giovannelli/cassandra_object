@@ -6,30 +6,23 @@ module CassandraObject
 
       # Attempts to +save+ the record and clears changed attributes if successful.
       def save(*) #:nodoc:
-        if status = super
-          @previously_changed = changes
-          @changed_attributes = {}
-        end
+        status = super
+        changes_applied
         status
       end
 
       # <tt>reload</tt> the record and clears changed attributes.
       def reload
-        super.tap do
-          @previously_changed.try :clear
-          @changed_attributes.try :clear
-        end
+        super
+        clear_changes_information
       end
 
       def write_attribute(name, value)
         name = name.to_s
         old = read_attribute(name)
 
+        self.send("#{name}_will_change!") unless value == old
         super
-
-        unless attribute_changed?(name) || old == read_attribute(name)
-          changed_attributes[name] = old
-        end
       end
     end
   end

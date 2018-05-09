@@ -196,7 +196,7 @@ module CassandraObject
     end
 
     def write(method)
-      changed_attributes = Hash[changed.map { |attr| [attr, read_attribute(attr)] }]
+      # @changed_attributes = Hash[changed.map { |attr| [attr, read_attribute(attr)] }]
       self.class.send(method, id, changed_attributes)
     end
   end
