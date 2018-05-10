@@ -15,6 +15,7 @@ module CassandraObject
       def reload
         super
         clear_changes_information
+        self
       end
 
       def write_attribute(name, value)
