@@ -59,6 +59,8 @@ end
 module ActiveSupport
   class TestCase
 
+    self.test_order = :random
+
     def after_setup
       CassandraObject::Base.created_records.clear if CassandraObject::Base.created_records.any?
     end

@@ -5,11 +5,11 @@ module CassandraObject
     def initialize(attributes=nil)
       @new_record = true
       @destroyed = false
-      @attributes = {}
+      @model_attributes = {}
       self.attributes = attributes || {}
       attribute_definitions.each_value do |definition|
         unless definition.default.nil? || attribute_exists?(definition.name)
-          @attributes[definition.name] = definition.default
+          @model_attributes[definition.name] = definition.default
         end
       end
 
@@ -17,10 +17,10 @@ module CassandraObject
     end
 
     def initialize_dup(other)
-      @attributes = other.attributes
-      @attributes['created_at'] = nil
-      @attributes['updated_at'] = nil
-      @attributes.delete(self.class.primary_key)
+      @model_attributes = other.attributes
+      @model_attributes['created_at'] = nil
+      @model_attributes['updated_at'] = nil
+      @model_attributes.delete(self.class.primary_key)
       @id = nil
       @new_record = true
       @destroyed = false

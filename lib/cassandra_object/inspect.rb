@@ -3,7 +3,7 @@ module CassandraObject
     def inspect
       inspection = ["#{self.class.primary_key}: #{id.inspect}"]
 
-      @attributes.each do |attribute, value|
+      @model_attributes.each do |attribute, value|
         if value.present?
           inspection << "#{attribute}: #{attribute_for_inspect(value)}"
         end
