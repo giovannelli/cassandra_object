@@ -90,7 +90,7 @@ module CassandraObject
           object.instance_variable_set('@id', id) if id
           object.instance_variable_set('@new_record', false)
           object.instance_variable_set('@destroyed', false)
-          object.instance_variable_set('@attributes', typecast_persisted_attributes(object, attributes))
+          object.instance_variable_set('@model_attributes', typecast_persisted_attributes(object, attributes))
         end
       end
 
@@ -172,7 +172,7 @@ module CassandraObject
 
     def becomes(klass)
       became = klass.new
-      became.instance_variable_set('@attributes', @attributes)
+      became.instance_variable_set('@model_attributes', @model_attributes)
       became.instance_variable_set('@new_record', new_record?)
       became.instance_variable_set('@destroyed', destroyed?)
       became
@@ -180,7 +180,7 @@ module CassandraObject
 
     def reload
       clear_belongs_to_cache
-      @attributes = self.class.find(id).instance_variable_get('@attributes')
+      @model_attributes = self.class.find(id).instance_variable_get('@model_attributes')
       self
     end
 
