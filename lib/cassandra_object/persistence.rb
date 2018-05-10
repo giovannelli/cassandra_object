@@ -64,6 +64,7 @@ module CassandraObject
       end
 
       def insert_record(id, attributes)
+        attributes = attributes.dup
         attributes[self._key] = id if self.schema_type == :standard
         adapter.insert column_family, id, encode_attributes(attributes), self.ttl
       end
@@ -71,6 +72,7 @@ module CassandraObject
       def update_record(id, attributes)
         return if attributes.empty?
         if self.schema_type == :standard
+          attributes = attributes.dup
           attributes[self._key] = id
           id = self._key
         end
