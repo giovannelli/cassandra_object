@@ -7,7 +7,7 @@ module CassandraObject
       retries = 0
       begin
         super
-      rescue Cassandra::Errors::NoHostsAvailable
+      rescue Cassandra::Errors::NoHostsAvailable, Cassandra::Errors::IOError
         @connection = nil
         retries += 1
         retries < 2 ? retry : raise
@@ -18,7 +18,7 @@ module CassandraObject
       retries = 0
       begin
         super
-      rescue Cassandra::Errors::NoHostsAvailable
+      rescue Cassandra::Errors::NoHostsAvailable, Cassandra::Errors::IOError
         @connection = nil
         retries += 1
         retries < 2 ? retry : raise
