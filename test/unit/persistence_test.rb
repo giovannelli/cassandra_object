@@ -198,13 +198,17 @@ class CassandraObject::PersistenceTest < CassandraObject::TestCase
     assert_equal [], Issue.find(ids)
   end
 
-  test 'ttl' do
-    record = Issue.create({title: 'name', ttl: 1})
+  test 'ttl saves' do
+    record = Issue.create({title: 'name', ttl: 10})
     assert_nothing_raised do
       Issue.find(record.id)
     end
+  end
 
-    sleep 2
+  test 'ttl expires' do
+    record = Issue.create({title: 'othername', ttl: 2})
+
+    sleep 4
 
     assert_raise CassandraObject::RecordNotFound do
       Issue.find(record.id)
