@@ -5,6 +5,7 @@ require 'rails/test_help'
 require 'mocha/setup'
 
 require 'cassandra_object'
+require 'support/reconnection'
 require 'support/cassandra'
 require 'support/issue'
 require 'support/issue_dynamic'
