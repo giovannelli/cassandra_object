@@ -114,7 +114,7 @@ module CassandraObject
         # Setting defaults
         cluster_options.merge!({
                                 heartbeat_interval: cluster_options[:heartbeat_interval] || 2,
-                                idle_timeout: cluster_options[:idle_timeout] || 5,
+                                idle_timeout: cluster_options[:idle_timeout] || 60,
                                 max_schema_agreement_wait: 1,
                                 consistency: cluster_options[:consistency]||:quorum,
                                 protocol_version: cluster_options[:protocol_version]||3,
