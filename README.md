@@ -190,3 +190,9 @@ cql_response return an hash where the key is the model key and values is an hash
   Widget.cql_response([:name, :color])
   Widget.cql_response.limit(10)
 ```
+
+## Running tests on MacOS
+
+* Run a cassandra node on localhost (i.e. `ccm start` if CCM is used)
+* Increase the limit of open files with `ulimit -Sn 2048`
+* Run the tests by running the default rake task or `bundle exec rake test`

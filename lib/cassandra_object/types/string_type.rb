@@ -10,11 +10,11 @@ module CassandraObject
           str
         end
       end
-      
+
       def decode(str)
         begin
           (str.frozen? ? str.dup : str).force_encoding('UTF-8') if str
-        rescue Exception => e
+        rescue Exception
           str.to_s
         end
       end

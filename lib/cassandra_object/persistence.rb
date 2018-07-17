@@ -64,6 +64,7 @@ module CassandraObject
       end
 
       def insert_record(id, attributes)
+        attributes = attributes.dup
         attributes[self._key] = id if self.schema_type == :standard
         adapter.insert column_family, id, encode_attributes(attributes), self.ttl
       end
@@ -71,6 +72,7 @@ module CassandraObject
       def update_record(id, attributes)
         return if attributes.empty?
         if self.schema_type == :standard
+          attributes = attributes.dup
           attributes[self._key] = id
           id = self._key
         end
@@ -90,7 +92,7 @@ module CassandraObject
           object.instance_variable_set('@id', id) if id
           object.instance_variable_set('@new_record', false)
           object.instance_variable_set('@destroyed', false)
-          object.instance_variable_set('@attributes', typecast_persisted_attributes(object, attributes))
+          object.instance_variable_set('@model_attributes', typecast_persisted_attributes(object, attributes))
         end
       end
 
@@ -172,7 +174,7 @@ module CassandraObject
 
     def becomes(klass)
       became = klass.new
-      became.instance_variable_set('@attributes', @attributes)
+      became.instance_variable_set('@model_attributes', @model_attributes)
       became.instance_variable_set('@new_record', new_record?)
       became.instance_variable_set('@destroyed', destroyed?)
       became
@@ -180,7 +182,7 @@ module CassandraObject
 
     def reload
       clear_belongs_to_cache
-      @attributes = self.class.find(id).instance_variable_get('@attributes')
+      @model_attributes = self.class.find(id).instance_variable_get('@model_attributes')
       self
     end
 
@@ -196,7 +198,7 @@ module CassandraObject
     end
 
     def write(method)
-      changed_attributes = Hash[changed.map { |attr| [attr, read_attribute(attr)] }]
+      changed_attributes = changes.map {|k,change| [k, change.last] }.to_h
       self.class.send(method, id, changed_attributes)
     end
   end

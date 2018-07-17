@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'extendi-cassandra_object'
-  s.version = '1.0.7'
+  s.version = '1.0.9'
   s.description = 'Cassandra ActiveModel'
   s.summary = 'Cassandra ActiveModel'
   s.authors = ['Duccio Giovannelli', 'gotime']
@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.test_files  = `git ls-files -- {test}/*`.split("\n")
   s.require_paths = ['lib']
 
-  s.add_runtime_dependency('activemodel', '< 5.0')
+  s.add_runtime_dependency('activemodel', '<= 5.2')
   s.add_runtime_dependency('cassandra-driver', '>= 3.1.0')
   s.add_runtime_dependency('lz4-ruby', '>= 0.3.3')
 

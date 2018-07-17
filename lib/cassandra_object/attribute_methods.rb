@@ -40,20 +40,20 @@ module CassandraObject
     end
 
     def write_attribute(name, value)
-      @attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
+      @model_attributes[name.to_s] = self.class.typecast_attribute(self, name, value)
     end
 
     def read_attribute(name)
-      @attributes[name.to_s]
+      @model_attributes[name.to_s]
     end
 
     def attribute_exists?(name)
-      @attributes.key?(name.to_s)
+      @model_attributes.key?(name.to_s)
     end
 
     def attributes
       results = {}
-      @attributes.each_key do |key|
+      @model_attributes.each_key do |key|
         results[key] = read_attribute(key)
       end
       results
