@@ -6,6 +6,10 @@ class IssueSchemaCk < CassandraObject::BaseSchema
 
   self.keys = '(id, type, date)'
 
+  def self.timestamps
+    false
+  end
+
   def self.for_key key
     where_ids(key)
   end

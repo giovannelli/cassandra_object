@@ -27,6 +27,10 @@ module CassandraObject
 
     include Serialization
 
+    def self.timestamps
+      true
+    end
+
   end
 end
 
