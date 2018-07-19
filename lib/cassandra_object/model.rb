@@ -31,7 +31,11 @@ module CassandraObject
 
     def _key
       # todo only first key
-      keys.tr('()','').split(',').first
+      _keys.first
+    end
+
+    def _keys
+      keys.tr('()','').gsub(/\s+/, "").split(',')
     end
 
     def keys=(value)

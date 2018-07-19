@@ -22,7 +22,7 @@ CassandraObject::Base.config = {
 
 begin
   CassandraObject::Schema.drop_keyspace 'cassandra_object_test', true
-  CassandraObject::Schema.drop_keyspace 'blah', true
+  CassandraObject::Schema.drop_keyspace 'Blah', true
 rescue Exception => e
   puts e.message
 end
@@ -31,6 +31,7 @@ sleep 1
 CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schemaless.create_column_family 'Issues'
 CassandraObject::Schema.create_column_family 'IssueSchemas', {attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
+CassandraObject::Schema.create_column_family 'IssueSchemaCks', {attributes: 'id text, type text, date timestamp, value float, PRIMARY KEY (id, type, date)', options: {}}
 CassandraObject::Schemaless.create_column_family 'IssueDynamics'
 CassandraObject::Schemaless.create_column_family 'IssuesCustomConfig'
 CassandraObject::Schema.create_column_family 'IssueSchemaFathers', {attributes: 'id text, title text, field float, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
@@ -51,6 +52,7 @@ CassandraObject::Base.class_eval do
     # created_records.reject(&:destroyed?).each(&:destroy)
     Issue.delete_all
     IssueSchema.delete_all
+    IssueSchemaCk.delete_all
     IssueDynamic.delete_all
     created_records.clear
   end

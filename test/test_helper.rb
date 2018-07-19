@@ -13,6 +13,7 @@ require 'support/issue_custom_config'
 require 'support/issue_schema'
 require 'support/issue_schema_child'
 require 'support/issue_schema_father'
+require 'support/issue_schema_ck'
 
 module CassandraObject
   class TestCase < ActiveSupport::TestCase

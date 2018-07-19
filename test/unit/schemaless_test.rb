@@ -8,7 +8,7 @@ class CassandraObject::SchemalessTest < CassandraObject::TestCase
       existing_keyspace = false
       CassandraObject::Schemaless.create_keyspace 'Blah'
     rescue Exception => e
-      assert_equal e.message, 'Cannot add existing keyspace "blah"'
+      assert_equal e.message, 'Cannot add existing keyspace "Blah"'
       existing_keyspace = true
     ensure
       CassandraObject::Schemaless.drop_keyspace 'Blah'

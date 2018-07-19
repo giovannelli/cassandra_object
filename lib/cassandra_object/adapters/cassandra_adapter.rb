@@ -41,7 +41,7 @@ module CassandraObject
         end
 
         def where_string_async(id)
-          wheres = @scope.where_values.dup
+          wheres = @scope.where_values.dup.select.each_with_index { |_, i| i.even? }
           wheres << "#{@scope._key} = '#{id}'" if !id.nil?
           "WHERE #{wheres * ' AND '}" if wheres.any?
         end
@@ -139,10 +139,15 @@ module CassandraObject
       def select(scope)
         queries = QueryBuilder.new(self, scope).to_query_async
         # todo paginate
-        cql_rows = execute_async(queries).map{|item| item.rows.map{|x| x}}.flatten!
+        arguments = scope.where_values.select.each_with_index{ |_, i| i.odd? }.reject{ |c| c.empty? }.map(&:to_s)
+        cql_rows = execute_async(queries, arguments).map{|item| item.rows.map{|x| x}}.flatten!
         cql_rows.each do |cql_row|
           attributes = cql_row.to_hash
           key = attributes.delete(scope._key)
+          if scope._keys.size > 1
+            keys = scope._keys.map{ |k| attributes.dig(k) }.compact
+            key += "_#{keys.join('_')}"
+          end
           yield(key, attributes) unless attributes.empty?
         end
       end
