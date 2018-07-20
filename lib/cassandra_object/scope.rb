@@ -47,7 +47,8 @@ module CassandraObject
 
       if self.schema_type == :standard
         klass.adapter.select(self) do |key, attributes|
-          records[key] = attributes
+          records[key] ||= []
+          records[key] << attributes
         end
       else
         if @is_all && @id_values.empty?
@@ -73,7 +74,11 @@ module CassandraObject
         if self.raw_response || self.schema_type == :dynamic_attributes
           results << {key => attributes.values.compact.empty? ? attributes.keys : attributes}
         else
-          results << klass.instantiate(key, attributes)
+          if attributes.is_a?(Array)
+            attributes.each{ |attrs| results << klass.instantiate(key, attrs) }
+          else
+            results << klass.instantiate(key, attributes)
+          end
         end
       end
       results = results.reduce({}, :merge!) if self.schema_type == :dynamic_attributes

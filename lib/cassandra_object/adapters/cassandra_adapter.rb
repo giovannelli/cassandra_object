@@ -144,10 +144,6 @@ module CassandraObject
         cql_rows.each do |cql_row|
           attributes = cql_row.to_hash
           key = attributes.delete(scope._key)
-          if scope._keys.size > 1
-            keys = scope._keys.map{ |k| attributes.dig(k) }.compact
-            key += "_#{keys.join('_')}"
-          end
           yield(key, attributes) unless attributes.empty?
         end
       end
