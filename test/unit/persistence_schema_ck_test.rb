@@ -5,8 +5,7 @@ require 'test_helper'
 
 class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
 
-  test 'create' do
-
+  test 'composite key' do
     time1 = Time.now
     time2 = time1 + 1.second
 

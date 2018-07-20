@@ -50,7 +50,6 @@ module CassandraObject
           end
         else
 
-
           case object
             when ::String then
               Cassandra::Types.varchar
