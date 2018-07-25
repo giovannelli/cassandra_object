@@ -63,6 +63,10 @@ module CassandraObject
         end
       end
 
+      def delete_schema(obj)
+        adapter.delete(obj)
+      end
+
       def insert_record(id, attributes)
         attributes = attributes.dup
         attributes[self._key] = id if self.schema_type == :standard
@@ -152,7 +156,12 @@ module CassandraObject
     end
 
     def destroy
-      self.class.remove(id)
+      if self.class.schema_type == :standard
+        self.class.delete_schema self
+      else
+        self.class.remove(id)
+      end
+
       @destroyed = true
     end
 

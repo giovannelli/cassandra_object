@@ -25,6 +25,15 @@ class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
     item = res[1]
     assert_equal '1', item.id
     assert_equal time2.to_i, item.date.to_i
+
+  end
+
+  test 'destroy' do
+    IssueSchemaCk.create(id: '1', type: 'first', date: Time.now, value: 1.to_f)
+    IssueSchemaCk.create(id: '1', type: 'second', date: Time.now, value: 1.to_f)
+
+    IssueSchemaCk.find_by_id([1]).first.destroy
+    assert_equal 1, IssueSchemaCk.find_by_id([1]).size
   end
 
 end

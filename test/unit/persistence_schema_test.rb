@@ -95,27 +95,27 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
     assert_equal persisted_issue, reloaded_issue
   end
 
-  test 'remove' do
-    issue = IssueSchema.create(title: 'I rule', description: 'lololol')
-    id = issue.id
-    assert_equal id, IssueSchema.find(id).id
-    IssueSchema.remove(id)
-    assert_raise CassandraObject::RecordNotFound do
-      IssueSchema.find(id)
-    end
-  end
+  # test 'remove' do
+  #   issue = IssueSchema.create(title: 'I rule', description: 'lololol')
+  #   id = issue.id
+  #   assert_equal id, IssueSchema.find(id).id
+  #   IssueSchema.remove(id)
+  #   assert_raise CassandraObject::RecordNotFound do
+  #     IssueSchema.find(id)
+  #   end
+  # end
 
-  test 'remove multiple' do
-    ids = []
-    (1..10).each do
-      issue = IssueSchema.create(title: 'I rule', description: 'lololol')
-      ids << issue.id
-    end
+  # test 'remove multiple' do
+  #   ids = []
+  #   (1..10).each do
+  #     issue = IssueSchema.create(title: 'I rule', description: 'lololol')
+  #     ids << issue.id
+  #   end
 
-    IssueSchema.remove(ids)
+  #   IssueSchema.remove(ids)
 
-    assert_equal [], IssueSchema.find(ids)
-  end
+  #   assert_equal [], IssueSchema.find(ids)
+  # end
 
   test 'ttl' do
     description_test = 'this is the one with ttl'
