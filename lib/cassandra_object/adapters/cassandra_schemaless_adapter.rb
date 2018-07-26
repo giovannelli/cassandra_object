@@ -223,7 +223,6 @@ module CassandraObject
         execute_batchable(queries)
       end
 
-
       def delete(table, ids)
         ids = [ids] if !ids.is_a?(Array)
         arguments = nil

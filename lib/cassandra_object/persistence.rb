@@ -48,17 +48,17 @@ module CassandraObject
 
       def delete(ids, attributes = [])
         ids = [ids] if !ids.is_a?(Array)
-        if !attributes.empty?
+
+        if self.schema_type == :standard
+          attrs = attributes.is_a?(Array) ? {} : attributes
+          adapter.delete column_family, self._key, ids, attrs
+        elsif attributes.blank?
+          adapter.delete column_family, ids
+        else
           attr = {}
           attributes.each{|a| attr[a] = nil}
           ids.each do |id|
             adapter.update column_family, id, encode_attributes(attr)
-          end
-        else
-          if self.schema_type == :standard
-            adapter.delete column_family, self._key, ids
-          else
-            adapter.delete column_family, ids
           end
         end
       end

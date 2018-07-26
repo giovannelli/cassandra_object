@@ -32,8 +32,19 @@ class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
     IssueSchemaCk.create(id: '1', type: 'first', date: Time.now, value: 1.to_f)
     IssueSchemaCk.create(id: '1', type: 'second', date: Time.now, value: 1.to_f)
 
-    IssueSchemaCk.delete(1)
+    IssueSchemaCk.delete('1')
     assert_equal 0, IssueSchemaCk.find_by_id([1]).size
+  end
+
+  test 'delete with attributes' do
+    time = Time.now
+    IssueSchemaCk.create(id: '1', type: 'first', date: time, value: 1.to_f)
+    IssueSchemaCk.create(id: '1', type: 'first', date: Time.now, value: 1.to_f)
+    IssueSchemaCk.create(id: '2', type: 'first', date: time, value: 1.to_f)
+    IssueSchemaCk.create(id: '2', type: 'first', date: Time.now, value: 1.to_f)
+
+    IssueSchemaCk.delete('1', type: 'first')
+    assert_equal 2, IssueSchemaCk.find_by_id([1,2]).size
   end
 
   test 'delete multiple' do
@@ -42,7 +53,7 @@ class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
     IssueSchemaCk.create(id: '2', type: 'first', date: Time.now, value: 1.to_f)
     IssueSchemaCk.create(id: '2', type: 'first', date: Time.now, value: 1.to_f)
 
-    IssueSchemaCk.delete([1,2])
+    IssueSchemaCk.delete(['1','2'])
     assert_equal 0, IssueSchemaCk.find_by_id([1]).size
     assert_equal 0, IssueSchemaCk.find_by_id([2]).size
   end
@@ -51,7 +62,7 @@ class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
     IssueSchemaCk.create(id: '1', type: 'first', date: Time.now, value: 1.to_f)
     IssueSchemaCk.create(id: '1', type: 'second', date: Time.now, value: 1.to_f)
 
-    IssueSchemaCk.find_by_id([1]).first.destroy
+    IssueSchemaCk.find_by_id(['1']).first.destroy
     assert_equal 1, IssueSchemaCk.find_by_id([1]).size
   end
 
