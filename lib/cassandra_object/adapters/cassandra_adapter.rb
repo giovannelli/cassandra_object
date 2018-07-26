@@ -177,7 +177,13 @@ module CassandraObject
         execute_batchable(queries)
       end
 
-      def delete(obj)
+      def delete(table, key, ids)
+        ids = [ids] if !ids.is_a?(Array)
+        statement = "DELETE FROM #{table} WHERE #{key} IN (#{ids.map{|id| "'#{id}'"}.join(',')})"
+        execute(statement, nil)
+      end
+
+      def delete_single(obj)
         keys = obj.class._keys
         wheres = keys.map{ |k| "#{k} = ?" }.join(' AND ')
         arguments = keys.map{ |k| obj.attributes[k] }

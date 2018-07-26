@@ -64,7 +64,7 @@ module CassandraObject
       end
 
       def delete_schema(obj)
-        adapter.delete(obj)
+        adapter.delete_single(obj)
       end
 
       def insert_record(id, attributes)
