@@ -51,7 +51,7 @@ module CassandraObject
 
         if self.schema_type == :standard
           attrs = attributes.is_a?(Array) ? {} : attributes
-          adapter.delete column_family, self._key, ids, attrs
+          adapter.delete self, ids, attrs
         elsif attributes.blank?
           adapter.delete column_family, ids
         else
