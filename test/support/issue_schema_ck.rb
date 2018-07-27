@@ -4,6 +4,8 @@ class IssueSchemaCk < CassandraObject::BaseSchema
   time :date
   float :value
 
+  self.allow_filtering = true
+
   self.keys = '(id, type, date)'
 
   def self.timestamps

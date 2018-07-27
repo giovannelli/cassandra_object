@@ -180,7 +180,6 @@ module CassandraObject
       def delete(scope, ids, attributes = {})
         ids = [ids] if !ids.is_a?(Array)
         statement = "DELETE FROM #{scope.column_family} WHERE #{scope._key} IN (#{ids.map{|id| '?'}.join(',')})"
-        statement += " ALLOW FILTERING" if scope.allow_filtering
         arguments = ids
         unless attributes.blank?
           statement += " AND #{attributes.keys.map{ |k| "#{k} = ?" }.join(' AND ')}"
