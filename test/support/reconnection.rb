@@ -1,7 +1,5 @@
 module CassandraObject
-  ###
-  # Force reconnection in test
-  ##
+
   module AdapterExtension
     def execute(*args)
       retries = 0

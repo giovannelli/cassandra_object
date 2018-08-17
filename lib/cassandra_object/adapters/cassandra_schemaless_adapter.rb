@@ -1,12 +1,12 @@
 gem 'cassandra-driver'
 require 'cassandra'
+require 'support/reconnection'
 require 'logger'
 
 module CassandraObject
   module Adapters
     class CassandraSchemalessAdapter < AbstractAdapter
       class QueryBuilder
-
         def initialize(adapter, scope)
           @adapter = adapter
           @scope = scope
@@ -193,7 +193,7 @@ module CassandraObject
           new_next_cursor = item.paging_state unless item.last_page?
           item.rows.each{ |x| records << x }
         end
-        return {results: records, new_next_cursor: new_next_cursor}
+        {results: records, new_next_cursor: new_next_cursor}
       end
 
       def insert(table, id, attributes, ttl = nil)

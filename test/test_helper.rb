@@ -5,7 +5,6 @@ require 'rails/test_help'
 require 'mocha/setup'
 
 require 'cassandra_object'
-require 'support/reconnection'
 require 'support/cassandra'
 require 'support/issue'
 require 'support/issue_dynamic'
@@ -17,7 +16,6 @@ require 'support/issue_schema_ck'
 
 module CassandraObject
   class TestCase < ActiveSupport::TestCase
-
     def temp_object(&block)
       Class.new(CassandraObject::Base) do
         self.column_family = 'Issues'

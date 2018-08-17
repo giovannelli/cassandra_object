@@ -1,5 +1,6 @@
 gem 'cassandra-driver'
 require 'cassandra'
+require 'support/reconnection'
 require 'logger'
 
 module CassandraObject
