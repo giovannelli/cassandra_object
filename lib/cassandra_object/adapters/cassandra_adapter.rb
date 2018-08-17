@@ -45,7 +45,6 @@ module CassandraObject
           wheres << "#{@scope._key} = '#{id}'" if !id.nil?
           "WHERE #{wheres * ' AND '}" if wheres.any?
         end
-
       end
 
       def cassandra_cluster_options
@@ -99,15 +98,15 @@ module CassandraObject
 
         # Setting defaults
         cluster_options.merge!({
-                                heartbeat_interval: cluster_options[:heartbeat_interval] || 2,
+                                heartbeat_interval: cluster_options.keys.include?(:heartbeat_interval) ? cluster_options[:heartbeat_interval] : 30,
                                 idle_timeout: cluster_options[:idle_timeout] || 60,
-                                consistency: cluster_options[:consistency] || :quorum,
+                                max_schema_agreement_wait: 1,
+                                consistency: cluster_options[:consistency] || :one,
                                 protocol_version: cluster_options[:protocol_version] || 3,
                                 page_size: cluster_options[:page_size] || 10000
                                })
-        return cluster_options
+        cluster_options
       end
-
 
       def connection
         @connection ||= begin
