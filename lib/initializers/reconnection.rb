@@ -1,5 +1,4 @@
 module CassandraObject
-
   module AdapterExtension
     def execute(*args)
       retries = 0
