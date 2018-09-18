@@ -71,5 +71,5 @@ module CassandraObject
   end
 end
 
-require 'initializers/reconnection'
+require 'initializers/reconnection' if defined?(Rails) && Rails.env.test?
 require 'cassandra_object/railtie' if defined?(Rails)
