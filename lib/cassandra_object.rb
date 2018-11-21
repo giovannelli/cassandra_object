@@ -1,7 +1,6 @@
 require 'active_support/all'
 require 'active_model'
 require 'cassandra_object/errors'
-require 'initializers/cassandra'
 
 module CassandraObject
   extend ActiveSupport::Autoload
