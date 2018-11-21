@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'extendi-cassandra_object'
-  s.version = '1.0.14'
+  s.version = '1.0.15'
   s.description = 'Cassandra ActiveModel'
   s.summary = 'Cassandra ActiveModel'
   s.authors = ['Duccio Giovannelli', 'gotime']
