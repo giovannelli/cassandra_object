@@ -135,6 +135,7 @@ module CassandraObject
       end
 
       def execute_async(queries, arguments = [], per_page = nil, next_cursor = nil)
+        retries = 0
         per_page ||= config[:page_size]
         futures = queries.map { |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
@@ -142,8 +143,14 @@ module CassandraObject
           end
         }
         futures.map do |future|
-          rows = future.get
-          rows
+          begin
+            rows = future.get
+            rows
+          rescue Exception => e
+            retries += 1
+            sleep 0.01
+            retry if retries <= 3
+          end
         end
       end
 
