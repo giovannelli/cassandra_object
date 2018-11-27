@@ -149,7 +149,11 @@ module CassandraObject
           rescue Exception => e
             retries += 1
             sleep 0.01
-            retry if retries <= 3
+            if retries <= 3
+              retry
+            else
+              raise e
+            end 
           end
         end
       end
