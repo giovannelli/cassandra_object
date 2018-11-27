@@ -137,11 +137,8 @@ module CassandraObject
           rescue StandardError => e
             retries += 1
             sleep 0.01
-            if retries <= 3
-              retry
-            else
-              raise e
-            end 
+            retry if retries <= 3
+            raise e
           end
         end
       end
