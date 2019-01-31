@@ -4,6 +4,7 @@ rvm:
   - 2.6.1
 env:
   - CASSANDRA_VERSION=3.9
+  - CASSANDRA_VERSION=3.11.1
 jdk:
   - oraclejdk8
 
