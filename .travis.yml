@@ -4,9 +4,6 @@ rvm:
   - 2.6.1
 env:
   - CASSANDRA_VERSION=3.9
-  - CASSANDRA_VERSION=3.11
-  - CASSANDRA_VERSION=3.9 ACTIVEMODEL_VERSION='< 5'
-  - CASSANDRA_VERSION=3.11 ACTIVEMODEL_VERSION='< 5'
 jdk:
   - oraclejdk8
 
@@ -20,5 +17,4 @@ before_install:
 install:
   - ccm create -n 1 -v $CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster
   - ccm start
-  - if [ -n "$ACTIVEMODEL_VERSION" ];then bundle add activemodel --version "$ACTIVEMODEL_VERSION"; fi
   - bundle install
