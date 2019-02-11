@@ -17,15 +17,15 @@ env:
 jdk:
   - oraclejdk8
 
+services:
+  - docker
+
 before_install:
   - sudo apt-get install libjna-java
   - sudo apt-get install python-support
   - sudo easy_install pyYaml
   - sudo easy_install pip
   - sudo pip install ccm
-
-services:
-  - docker
 
 install:
   - if [ -n "$ACTIVEMODEL_VERSION" ];then bundle add activemodel --version "$ACTIVEMODEL_VERSION"; fi
