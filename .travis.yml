@@ -33,11 +33,11 @@ install:
       ccm start;
     fi
     if [ -n "$SCYLLA_VERSION" ];then 
-      SCYLLA_IMAGE=scylladb/scylla:$SCYLLA_VERSION; 
-      docker pull $SCYLLA_IMAGE;
-      docker run --name cassandra_test -d -p "9042:9042" -p "9160:9160" $SCYLLA_IMAGE;
-      function check_scylla(){ docker exec -it cassandra_test nodetool status | grep UN };
-      until check_scylla do;
-       echo "waiting...";
-      done;
+      SCYLLA_IMAGE=scylladb/scylla:$SCYLLA_VERSION
+      docker pull $SCYLLA_IMAGE
+      docker run --name cassandra_test -d -p "9042:9042" -p "9160:9160" $SCYLLA_IMAGE
+      function check_scylla(){ docker exec -it cassandra_test nodetool status | grep UN; }
+      until check_scylla; do
+       echo "waiting..."
+      done
     fi
