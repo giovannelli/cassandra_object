@@ -30,19 +30,24 @@ module CassandraObject
             str << "ALLOW FILTERING" if @scope.klass.allow_filtering
             return [] << str.delete_if(&:blank?) * ' '
           end
-          @scope.id_values.map do |id|
-            str = [
-                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-                where_string_async(id)
-            ]
-            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
-            str.delete_if(&:blank?) * ' '
-          end
+
+          str = [
+            "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+            where_string_async(@scope.id_values)
+          ]
+          str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
+          [str.delete_if(&:blank?) * ' ']
         end
 
-        def where_string_async(id)
+        def where_string_async(ids)
           wheres = @scope.where_values.dup.select.each_with_index { |_, i| i.even? }
-          wheres << "#{@scope._key} = '#{id}'" if !id.nil?
+          if ids.present?
+            wheres << if ids.size > 1
+                        "#{@scope._key} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+                      else
+                        "#{@scope._key} = '#{ids.first}'"
+                      end
+          end
           "WHERE #{wheres * ' AND '}" if wheres.any?
         end
       end

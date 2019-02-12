@@ -42,11 +42,14 @@ module CassandraObject
 
         def where_string_async(ids)
           conditions = []
-          if ids.size > 1
-            conditions << "#{@adapter.primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
-          else
-            conditions << "#{@adapter.primary_key_column} = '#{ids.first}'"
-          end if ids.present?
+
+          if ids.present?
+            conditions << if ids.size > 1
+                            "#{@adapter.primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+                          else
+                            "#{@adapter.primary_key_column} = '#{ids.first}'"
+                          end
+          end
 
           select_values = @scope.select_values.select { |sv| sv != :column1 }
           if select_values.size > 0
