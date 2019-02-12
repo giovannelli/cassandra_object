@@ -24,7 +24,6 @@ before_install:
 
 install:
   - |
-    bundle install
     if [ -n "$CASSANDRA_VERSION" ];then 
       ccm create -n 1 -v $CASSANDRA_VERSION -i 127.0.0. -s -b test-cluster; 
       ccm start;
@@ -38,6 +37,7 @@ install:
        echo "waiting..."
       done
     fi
+    bundle install
     if [ -n "$ACTIVEMODEL_VERSION" ];then 
       bundle add activemodel --version "$ACTIVEMODEL_VERSION"; 
     fi
