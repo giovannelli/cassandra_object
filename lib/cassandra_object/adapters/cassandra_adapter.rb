@@ -266,7 +266,7 @@ module CassandraObject
               AND caching = '{\"keys\":\"ALL\", \"rows_per_partition\":\"NONE\"}'
               AND comment = ''
               AND compaction = {'min_sstable_size': '52428800', 'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy'}
-              AND compression = {'chunk_length_kb': '64', 'sstable_compression': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+              AND compression = {'chunk_length_kb': '64', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
               AND dclocal_read_repair_chance = 0.0
               AND default_time_to_live = 0
               AND gc_grace_seconds = 864000
