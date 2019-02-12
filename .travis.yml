@@ -37,7 +37,7 @@ install:
        echo "waiting..."
       done
     fi
-    bundle install
     if [ -n "$ACTIVEMODEL_VERSION" ];then 
       bundle add activemodel --version "$ACTIVEMODEL_VERSION"; 
     fi
+    bundle install
