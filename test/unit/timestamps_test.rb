@@ -21,7 +21,22 @@ class CassandraObject::TimestampsTest < CassandraObject::TestCase
   test 'created_at sets only if nil' do
     time = 5.days.ago
     issue = Issue.create created_at: time
-
     assert_equal time, issue.created_at
+  end
+
+  test 'updated_at to Time.now if not passed as an attribute' do
+    issue = Issue.create(description: 'foo')
+    issue.update_attributes(description: 'test')
+    updated_at = issue.updated_at
+    assert_equal updated_at, issue.updated_at
+  end
+
+  test 'updated_at overridden if passed as an attribute' do
+    issue = Issue.create(description: 'foo')
+    updated_at = issue.updated_at
+    assert_equal updated_at, issue.updated_at
+    new_updated_at = updated_at + 5.days
+    issue.update_attributes(updated_at: new_updated_at)
+    assert_equal new_updated_at, issue.updated_at
   end
 end
