@@ -26,34 +26,39 @@ module CassandraObject
 
           if @scope.id_values.empty?
             str = [
-                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-                where_string_async(nil)
+              "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+              where_string_async(nil)
             ]
             str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
             return [] << str.delete_if(&:blank?) * ' '
           end
-          @scope.id_values.map do |id|
-            str = [
-                "SELECT #{select_string} FROM #{@scope.klass.column_family}",
-                where_string_async(id)
-            ]
-            str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
-            str.delete_if(&:blank?) * ' '
-          end
+          str = [
+            "SELECT #{select_string} FROM #{@scope.klass.column_family}",
+            where_string_async(@scope.id_values)
+          ]
+          str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
+          [str.delete_if(&:blank?) * ' ']
         end
 
-        def where_string_async(id)
+        def where_string_async(ids)
           conditions = []
-          conditions << "#{@adapter.primary_key_column} = '#{id}'" if !id.nil?
+
+          if ids.present?
+            conditions << if ids.size > 1
+                            "#{@adapter.primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+                          else
+                            "#{@adapter.primary_key_column} = '#{ids.first}'"
+                          end
+          end
+
           select_values = @scope.select_values.select { |sv| sv != :column1 }
           if select_values.size > 0
             select_str = select_values.size > 1 ? "column1 IN (#{select_values.map { |sv| '?' }.join(',')})" : 'column1 = ?'
             conditions << select_str
           end
           conditions += @scope.where_values.select.each_with_index { |_, i| i.even? }
-          return conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
+          conditions.any? ? "WHERE #{conditions.join(' AND ')}" : nil
         end
-
       end
 
       def primary_key_column

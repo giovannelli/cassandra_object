@@ -4,10 +4,10 @@ module CassandraObject
 
     included do
       class_attribute :batch_statements
+      attr_accessor :store_updated_at
     end
 
     module ClassMethods
-
       def ttl=(value)
         @ttl = value
       end

@@ -15,7 +15,11 @@ module CassandraObject
 
       before_update if: :changed? do
         if self.class.timestamps
-          self.updated_at = Time.current
+          if store_updated_at.present?
+            self.updated_at = store_updated_at
+          else
+            self.updated_at = Time.current
+          end
         end
       end
     end
