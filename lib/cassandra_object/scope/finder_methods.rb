@@ -54,24 +54,9 @@ module CassandraObject
         ids = pids.flatten.compact.uniq.map(&:to_s)
         return [] if ids.empty?
 
-        results = {}
-        model_keys = self._keys
         qr = where_ids(ids).execute
-        
-        # Single key schema
-        if model_keys.size == 1
-          ids.each { |id| results[id] = nil }
-          qr.each do |r|
-            key = r.is_a?(Hash) ? r.keys.first : r.id
-            results[key] = r
-          end
-          ret = results.values.compact
-        
-        # Multiple keys schema
-        else
-          ret = qr.sort_by { |x| ids.index(x.id) }
-        end
-        ret
+        id = r.is_a?(Hash) ? r.keys.first : r.id
+        qr.sort_by { |x| ids.index(id) }
       end
 
       def not_found(id)
