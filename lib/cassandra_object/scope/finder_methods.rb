@@ -57,7 +57,7 @@ module CassandraObject
         results = {}
         ids.each { |id| results[id] = nil }
         where_ids(ids).execute.each { |r| results[r.id] = r }
-        results.values
+        results.values.compact
       end
 
       def not_found(id)
