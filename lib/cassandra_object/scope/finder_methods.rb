@@ -55,9 +55,23 @@ module CassandraObject
         return [] if ids.empty?
 
         results = {}
-        ids.each { |id| results[id] = nil }
-        where_ids(ids).execute.each { |r| r.is_a?(Hash) ? results[r.keys.first] = r : results[r.id] = r }
-        results.values.compact
+        model_keys = self._keys
+        qr = where_ids(ids).execute
+        
+        # Single key schema
+        if model_keys.size == 1
+          ids.each { |id| results[id] = nil }
+          qr.each do |r|
+            key = r.is_a?(Hash) ? r.keys.first : r.id
+            results[key] = r
+          end
+          ret = results.values.compact
+        
+        # Multiple keys schema
+        else
+          ret = qr.sort_by { |x| ids.index(x.id) }
+        end
+        ret
       end
 
       def not_found(id)
