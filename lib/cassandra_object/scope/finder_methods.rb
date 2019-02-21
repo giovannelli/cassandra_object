@@ -56,7 +56,7 @@ module CassandraObject
 
         results = {}
         ids.each { |id| results[id] = nil }
-        where_ids(ids).execute.each { |r| results[r.id] = r }
+        where_ids(ids).execute.each { |r| r.is_a?(Hash) ? results[r.keys.first] = r : results[r.id] = r }
         results.values.compact
       end
 
