@@ -55,7 +55,7 @@ module CassandraObject
         return [] if ids.empty?
 
         qr = where_ids(ids).execute
-        qr.sort_by do |x| 
+        qr.sort_by do |r| 
           id = r.is_a?(Hash) ? r.keys.first : r.id
           ids.index(id)
         end
