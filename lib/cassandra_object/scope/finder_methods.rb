@@ -50,11 +50,14 @@ module CassandraObject
         end
       end
 
-      def find_some(ids)
-        ids = ids.flatten
+      def find_some(pids)
+        ids = pids.flatten.compact.uniq.map(&:to_s)
         return [] if ids.empty?
-        ids = ids.compact.map(&:to_s).uniq
-        where_ids(ids).execute
+
+        results = {}
+        ids.each { |id| results[id] = nil }
+        where_ids(ids).execute.each { |r| results[r.id] = r }
+        results.values
       end
 
       def not_found(id)
