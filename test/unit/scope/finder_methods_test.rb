@@ -48,13 +48,12 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
 
   test 'IssueSchemaCk: find with ids sorted' do
     ids = (0..999).to_a.map(&:to_s)
-    time = Time.now - 10.years
     ids.each do |i|
-      IssueSchemaCk.create(id: i, type: 'first', date: time, value: 1.to_f)
-      IssueSchemaCk.create(id: i, type: 'first', date: Time.now, value: 1.to_f)
+      IssueSchemaCk.create(id: i, type: 'first', date: Date.yesterday.to_time, value: 1.0)
+      IssueSchemaCk.create(id: i, type: 'first', date: Date.today.to_time, value: 2.0)
     end
     ids_to_find = ids.sample(10)
-    assert_equal ids_to_find.size * 2, IssueSchemaCk.find(ids_to_find).map(&:id).size
+    assert_equal ids_to_find.size * 2, IssueSchemaCk.find(ids_to_find).size
     assert_equal ids_to_find, IssueSchemaCk.find(ids_to_find).map(&:id).uniq
     IssueSchemaCk.delete_all
   end
