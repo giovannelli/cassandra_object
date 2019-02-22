@@ -4,7 +4,6 @@
 require 'test_helper'
 
 class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
-
   test 'composite key' do
     time1 = Time.now
     time2 = time1 + 1.second
@@ -25,19 +24,17 @@ class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
     item = res[1]
     assert_equal '1', item.id
     assert_equal time2.to_i, item.date.to_i
-
   end
 
   test 'delete' do
     IssueSchemaCk.create(id: '1', type: 'first', date: Time.now, value: 1.to_f)
     IssueSchemaCk.create(id: '1', type: 'second', date: Time.now, value: 1.to_f)
-
     IssueSchemaCk.delete('1')
     assert_equal 0, IssueSchemaCk.find_by_id([1]).size
   end
 
   test 'delete with attributes' do
-    time = Time.now
+    time = Time.now - 10.days
     IssueSchemaCk.create(id: '1', type: 'first', date: time, value: 1.to_f)
     IssueSchemaCk.create(id: '1', type: 'first', date: Time.now, value: 1.to_f)
     IssueSchemaCk.create(id: '2', type: 'first', date: time, value: 1.to_f)
@@ -65,5 +62,4 @@ class CassandraObject::PersistenceSchemaCkTest < CassandraObject::TestCase
     IssueSchemaCk.find_by_id(['1']).first.destroy
     assert_equal 1, IssueSchemaCk.find_by_id([1]).size
   end
-
 end

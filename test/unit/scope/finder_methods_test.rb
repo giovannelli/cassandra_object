@@ -26,6 +26,15 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     assert_equal [first_issue, second_issue].to_set, Issue.find([first_issue.id, second_issue.id]).to_set
   end
 
+  test 'find with ids sorted' do
+    ids = (0..999).to_a.map(&:to_s)
+    ids.each do |i|
+      IssueDynamic.create(key: i, title: "foo_title_#{i}")
+    end
+    ids_to_find = ids.sample(10)
+    assert_equal ids_to_find, IssueDynamic.find(ids_to_find).keys
+  end
+
   test 'find_by_id' do
     Issue.create.tap do |issue|
       assert_equal issue, Issue.find_by_id(issue.id)
@@ -64,9 +73,7 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     IssueDynamic.delete(['1', '2'])
   end
 
-
   test 'find all in batches dynamic paged' do
-
     issues = []
     100.times.each do |i|
       issues << IssueDynamic.create(key: i, title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
@@ -135,5 +142,4 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
   #   first_issue = IssueDynamic.create(key: '1', title: 'tit', dynamic_field1: 'one', dynamic_field2: 'two')
   #   f = IssueDynamic.first
   # end
-
 end

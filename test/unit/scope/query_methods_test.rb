@@ -37,5 +37,4 @@ class CassandraObject::Scope::QueryMethodsTest < CassandraObject::TestCase
     foo_issue_columns =  Issue.columns.first
     assert_equal ['created_at', 'description', 'title', 'updated_at'], foo_issue_columns[foo_issue_columns.keys.first]
   end
-
 end
