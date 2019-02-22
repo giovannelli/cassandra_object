@@ -56,19 +56,19 @@ module CassandraObject
 
         qr = where_ids(ids).execute
         is_dymnamic = qr.is_a?(Hash)
- 
-        results = qr.sort_by do |r|
-                    id = r.keys.first if r.is_a?(Hash)
-                    id = r[0] if r.is_a?(Array)
-                    id = r.id if id.nil?
-                    ids.index(id)
-                  end
+
+        results = qr.sort_by do |r| 
+          id = r.keys.first if r.is_a?(Hash)
+          id = r[0] if r.is_a?(Array)
+          id = r.id if id.nil?
+          ids.index(id)
+        end
 
         is_dymnamic ? Hash[results] : results
       end
 
       def not_found(id)
-        raise CassandraObject::RecordNotFound, "Couldn't find #{self.name} with key #{id.inspect}"
+        raise CassandraObject::RecordNotFound, "Couldn't find #{name} with key #{id.inspect}"
       end
     end
   end
