@@ -26,13 +26,37 @@ class CassandraObject::FinderMethodsTest < CassandraObject::TestCase
     assert_equal [first_issue, second_issue].to_set, Issue.find([first_issue.id, second_issue.id]).to_set
   end
 
-  test 'find with ids sorted' do
+  test 'IssueDynamic: find with ids sorted' do
     ids = (0..999).to_a.map(&:to_s)
     ids.each do |i|
       IssueDynamic.create(key: i, title: "foo_title_#{i}")
     end
     ids_to_find = ids.sample(10)
     assert_equal ids_to_find, IssueDynamic.find(ids_to_find).keys
+    IssueDynamic.delete_all
+  end
+
+  test 'Issue: find with ids sorted' do
+    ids = (0..999).to_a.map(&:to_s)
+    ids.each do |i|
+      Issue.create(id: i, title: "foo_title_#{i}")
+    end
+    ids_to_find = ids.sample(10)
+    assert_equal ids_to_find, Issue.find(ids_to_find).map(&:id)
+    Issue.delete_all
+  end
+
+  test 'IssueSchemaCk: find with ids sorted' do
+    ids = (0..999).to_a.map(&:to_s)
+    time = Time.now - 10.years
+    ids.each do |i|
+      IssueSchemaCk.create(id: i, type: 'first', date: time, value: 1.to_f)
+      IssueSchemaCk.create(id: i, type: 'first', date: Time.now, value: 1.to_f)
+    end
+    ids_to_find = ids.sample(10)
+    assert_equal ids_to_find.size * 2, IssueSchemaCk.find(ids_to_find).map(&:id).size
+    assert_equal ids_to_find, IssueSchemaCk.find(ids_to_find).map(&:id).uniq
+    IssueSchemaCk.delete_all
   end
 
   test 'find_by_id' do

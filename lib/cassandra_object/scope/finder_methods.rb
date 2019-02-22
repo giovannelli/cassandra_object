@@ -57,7 +57,7 @@ module CassandraObject
         qr = where_ids(ids).execute
         is_dymnamic = qr.is_a?(Hash)
 
-        results = qr.sort_by do |r| 
+        results = qr.sort_by do |r|
           id = r.keys.first if r.is_a?(Hash)
           id = r[0] if r.is_a?(Array)
           id = r.id if id.nil?
