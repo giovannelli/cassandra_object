@@ -4,3 +4,7 @@ Gemfile.lock
 .byebug_history
 .ruby-version
 TAGS
+.editorconfig
+.rubocop.yml
+.prettierrc.js
+.eslintrc.js
