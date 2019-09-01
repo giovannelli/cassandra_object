@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.test_files  = `git ls-files -- {test}/*`.split("\n")
   s.require_paths = ['lib']
 
-  s.add_runtime_dependency('activemodel', '>= 4.2.0', '< 6.0.0')
+  s.add_runtime_dependency('activemodel', '>= 4.2.0', '< 7.0.0')
   s.add_runtime_dependency('cassandra-driver', '>= 3.2.3')
   s.add_runtime_dependency('lz4-ruby', '>= 0.3.3')
 
