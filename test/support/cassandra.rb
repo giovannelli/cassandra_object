@@ -3,6 +3,7 @@ Bundler.require :cassandra
 CassandraObject::Base.config = {
   keyspace: 'cassandra_object_test',
   hosts: ['127.0.0.1'],
+  port: 9252,
   compression: :lz4,
   connect_timeout: 1,
   timeout: 30,

@@ -28,7 +28,7 @@ class CassandraObject::TimestampsTest < CassandraObject::TestCase
     udate = 1.year.ago
     issue = Issue.create(description: 'foo', updated_at: udate)
     assert_equal udate, issue.updated_at
-    issue.update_attributes(description: 'test')
+    issue.update(description: 'test')
     assert_not_equal udate, issue.updated_at
   end
 
@@ -36,7 +36,7 @@ class CassandraObject::TimestampsTest < CassandraObject::TestCase
     issue = Issue.create(description: 'foo')
     updated_at = issue.updated_at
     new_updated_at = updated_at + 5.days
-    issue.update_attributes(description: 'bar', store_updated_at: new_updated_at)
+    issue.update(description: 'bar', store_updated_at: new_updated_at)
     assert_equal new_updated_at, issue.updated_at
   end
 
@@ -44,7 +44,7 @@ class CassandraObject::TimestampsTest < CassandraObject::TestCase
     udate = 1.year.ago
     issue = Issue.create(description: 'foo', updated_at: udate)
     assert_equal udate, issue.updated_at
-    issue.update_attributes(description: 'bar', store_updated_at: issue.updated_at)
+    issue.update(description: 'bar', store_updated_at: issue.updated_at)
     assert_equal udate, issue.updated_at
   end
 end

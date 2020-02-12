@@ -30,7 +30,7 @@ class CassandraObject::CallbacksTest < CassandraObject::TestCase
     issue = TestIssue.create
     issue.reset_callback_history
 
-    issue.update_attribute :description, 'foo'
+    issue.update :description, 'foo'
 
     assert_equal ['after_save', 'after_update'], issue.callback_history
   end

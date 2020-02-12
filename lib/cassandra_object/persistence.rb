@@ -21,7 +21,6 @@ module CassandraObject
       end
 
       def _key
-        # todo only mono primary id for now
         self.keys.tr('()','').split(',').first
       end
 
@@ -37,13 +36,13 @@ module CassandraObject
           end
         else
           key = attributes[:key]
-          insert_record key.to_s, attributes.except(:key).stringify_keys
+          _insert_record key.to_s, attributes.except(:key).stringify_keys
           attributes
         end
       end
 
       def update(id, attributes)
-        update_record(id, attributes)
+        _update_record(id, attributes)
       end
 
       def delete(ids, attributes = [])
@@ -67,13 +66,13 @@ module CassandraObject
         adapter.delete_single(obj)
       end
 
-      def insert_record(id, attributes)
+      def _insert_record(id, attributes)
         attributes = attributes.dup
         attributes[self._key] = id if self.schema_type == :standard
         adapter.insert column_family, id, encode_attributes(attributes), self.ttl
       end
 
-      def update_record(id, attributes)
+      def _update_record(id, attributes)
         return if attributes.empty?
         if self.schema_type == :standard
           attributes = attributes.dup
@@ -171,15 +170,12 @@ module CassandraObject
       save(validate: false)
     end
 
-    def update_attributes(attributes)
-      self.attributes = attributes
-      save
+    def update
+      write :_update_record
     end
 
-    def update_attributes!(attributes)
-      self.attributes = attributes
-      save!
-    end
+    alias update_attributes update
+    deprecate update_attributes: 'please, use update instead'
 
     def becomes(klass)
       became = klass.new
@@ -199,11 +195,7 @@ module CassandraObject
 
     def create
       @new_record = false
-      write :insert_record
-    end
-
-    def update
-      write :update_record
+      write :_insert_record
     end
 
     def write(method)
