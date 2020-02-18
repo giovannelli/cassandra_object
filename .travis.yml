@@ -4,6 +4,8 @@ rvm:
   - 2.6.1
   - 2.6.3
   - 2.6.4
+  - 2.6.5
+  - 2.7.0
 env:
   - SCYLLA_VERSION=3.0.2
   - CASSANDRA_VERSION=3.0.10
