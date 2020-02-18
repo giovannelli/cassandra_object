@@ -12,9 +12,6 @@ env:
   - SCYLLA_VERSION=3.0.2
   - CASSANDRA_VERSION=3.0.10
   - CASSANDRA_VERSION=3.9
-  - SCYLLA_VERSION=3.0.2 ACTIVEMODEL_VERSION='< 5'
-  - CASSANDRA_VERSION=3.0.10 ACTIVEMODEL_VERSION='< 5'
-  - CASSANDRA_VERSION=3.9 ACTIVEMODEL_VERSION='< 5'
 
 jdk:
   - oraclejdk8
@@ -43,8 +40,5 @@ install:
       until check_scylla; do
        echo "waiting..."
       done
-    fi
-    if [ -n "$ACTIVEMODEL_VERSION" ];then
-      bundle add activemodel --version "$ACTIVEMODEL_VERSION";
     fi
     bundle install
