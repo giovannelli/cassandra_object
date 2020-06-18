@@ -100,7 +100,7 @@ module CassandraObject
         ])
 
         {
-            load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
+            # load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
             reconnection_policy: 'Cassandra::Reconnection::Policies::%s',
             retry_policy: 'Cassandra::Retry::Policies::%s'
         }.each do |policy_key, class_template|
@@ -113,7 +113,7 @@ module CassandraObject
             end
           end
         end
-        
+
         # Setting defaults
         cluster_options.merge!({
                                 heartbeat_interval: cluster_options.keys.include?(:heartbeat_interval) ? cluster_options[:heartbeat_interval] : 30,

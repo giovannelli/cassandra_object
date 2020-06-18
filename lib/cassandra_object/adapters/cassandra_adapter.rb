@@ -87,7 +87,7 @@ module CassandraObject
         ])
 
         {
-            load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
+            # load_balancing_policy: 'Cassandra::LoadBalancing::Policies::%s',
             reconnection_policy: 'Cassandra::Reconnection::Policies::%s',
             retry_policy: 'Cassandra::Retry::Policies::%s'
         }.each do |policy_key, class_template|

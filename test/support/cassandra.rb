@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Bundler.require :cassandra
 
 CassandraObject::Base.config = {
@@ -13,7 +15,7 @@ CassandraObject::Base.config = {
   connections_per_local_node: 4,
   schema_refresh_delay: 0.1,
   schema_refresh_timeout: 0.1,
-  load_balancing_policy: 'RoundRobin',
+  load_balancing_policy: Cassandra::LoadBalancing::Policies::TokenAware.new,
   reconnection_policy: { policy: 'Constant', params: [5] },
   retry_policy: 'Default',
   # connections_per_remote_node: nil,
@@ -30,12 +32,12 @@ end
 sleep 1
 CassandraObject::Schema.create_keyspace 'cassandra_object_test'
 CassandraObject::Schemaless.create_column_family 'Issues'
-CassandraObject::Schema.create_column_family 'IssueSchemas', {attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
-CassandraObject::Schema.create_column_family 'IssueSchemaCks', {attributes: 'id text, type text, date timestamp, value float, PRIMARY KEY (id, type, date)', options: {}}
+CassandraObject::Schema.create_column_family 'IssueSchemas', { attributes: 'id text, title text, description text, field float, intero int, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {} }
+CassandraObject::Schema.create_column_family 'IssueSchemaCks', { attributes: 'id text, type text, date timestamp, value float, PRIMARY KEY (id, type, date)', options: {} }
 CassandraObject::Schemaless.create_column_family 'IssueDynamics'
 CassandraObject::Schemaless.create_column_family 'IssuesCustomConfig'
-CassandraObject::Schema.create_column_family 'IssueSchemaFathers', {attributes: 'id text, title text, field float, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {}}
-CassandraObject::Schema.create_column_family 'IssueSchemaChildren', {attributes: 'id text, title text, description text, field float, created_at timestamp, updated_at timestamp, issue_schema_father_id text, PRIMARY KEY (id)', options: {}}
+CassandraObject::Schema.create_column_family 'IssueSchemaFathers', { attributes: 'id text, title text, field float, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {} }
+CassandraObject::Schema.create_column_family 'IssueSchemaChildren', { attributes: 'id text, title text, description text, field float, created_at timestamp, updated_at timestamp, issue_schema_father_id text, PRIMARY KEY (id)', options: {} }
 CassandraObject::BaseSchemaless.adapter.consistency = :quorum
 CassandraObject::BaseSchemalessDynamic.adapter.consistency = :quorum
 CassandraObject::BaseSchema.adapter.consistency = :quorum
@@ -60,7 +62,6 @@ end
 
 module ActiveSupport
   class TestCase
-
     self.test_order = :random
 
     def after_setup
