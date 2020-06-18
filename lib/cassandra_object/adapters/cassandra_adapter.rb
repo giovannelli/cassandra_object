@@ -124,20 +124,22 @@ module CassandraObject
       end
 
       def execute(statement, arguments = [])
-        puts "cassandra adapter: #{statement}"
+        consistency = config[:write_consistency] || config[:consistency]
+        puts "cassandra adapter: #{consistency}"
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           type_hints = []
           arguments.each { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } unless arguments.nil?
-          connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size]
+          connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: consistency, page_size: config[:page_size]
         end
       end
 
       def execute_async(queries, arguments = [])
-        puts "execute_async adapter: #{statement}"
+        consistency = config[:consistency]
+        puts "execute_async adapter: #{consistency}"
         retries = 0
         futures = queries.map do |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: config[:consistency], page_size: config[:page_size]
+            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: config[:page_size]
           end
         end
         futures.map do |future|

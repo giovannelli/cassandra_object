@@ -138,20 +138,22 @@ module CassandraObject
       end
 
       def execute(statement, arguments = [])
-        puts "schemaless adapter: #{statement}"
+        consistency = config[:write_consistency] || config[:consistency]
+        puts "schemaless adapter: #{consistency}"
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
-          connection.execute statement, arguments: arguments, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size]
+          connection.execute statement, arguments: arguments, consistency: consistency, page_size: config[:page_size]
         end
       end
 
       def execute_async(queries, arguments = [], per_page = nil, next_cursor = nil)
-        puts "schemaless adapter async: #{queries}"
+        consistency = config[:consistency]
+        puts "schemaless adapter async: #{consistency}"
 
         retries = 0
         per_page ||= config[:page_size]
         futures = queries.map { |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: config[:consistency], page_size: per_page, paging_state: next_cursor
+            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: per_page, paging_state: next_cursor
           end
         }
         futures.map do |future|
