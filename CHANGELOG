@@ -1,0 +1,5 @@
+# Changelog
+
+## [1.1.0] - 2020-06-18
+### cHANGED
+- load_balancing_policy now accept only Cassandra::LoadBalancing::Policies objects
