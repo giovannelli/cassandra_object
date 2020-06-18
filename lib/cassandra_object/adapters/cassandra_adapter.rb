@@ -125,21 +125,19 @@ module CassandraObject
 
       def execute(statement, arguments = [])
         puts "cassandra adapter: #{statement}"
-        puts @consistency
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           type_hints = []
           arguments.each { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } unless arguments.nil?
-          connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: @consistency, page_size: config[:page_size]
+          connection.execute statement, arguments: arguments, type_hints: type_hints, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size]
         end
       end
 
       def execute_async(queries, arguments = [])
         puts "execute_async adapter: #{statement}"
-        puts @consistency
         retries = 0
         futures = queries.map do |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: @consistency, page_size: config[:page_size]
+            connection.execute_async q, arguments: arguments, consistency: config[:consistency], page_size: config[:page_size]
           end
         end
         futures.map do |future|
@@ -156,7 +154,6 @@ module CassandraObject
       end
 
       def select(scope)
-        @consistency = config[:consistency]
         queries = QueryBuilder.new(self, scope).to_query_async
         # todo paginate
         arguments = scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.blank? }
@@ -177,7 +174,6 @@ module CassandraObject
       end
 
       def write(table, id, attributes, ttl = nil)
-        @consistency = config[:write_consistency] || config[:consistency]
         statement = "INSERT INTO #{table} (#{(attributes.keys).join(',')}) VALUES (#{(['?'] * attributes.size).join(',')})"
         statement += " USING TTL #{ttl}" if ttl.present?
         arguments = attributes.values
@@ -199,7 +195,6 @@ module CassandraObject
       end
 
       def delete(scope, ids, attributes = {})
-        @consistency = config[:write_consistency] || config[:consistency]
         ids = [ids] if !ids.is_a?(Array)
         statement = "DELETE FROM #{scope.column_family} WHERE #{scope._key} IN (#{ids.map { |id| '?' }.join(',')})"
         arguments = ids
@@ -211,7 +206,6 @@ module CassandraObject
       end
 
       def delete_single(obj)
-        @consistency = config[:write_consistency] || config[:consistency]
         keys = obj.class._keys
         wheres = keys.map { |k| "#{k} = ?" }.join(' AND ')
         arguments = keys.map { |k| obj.attributes[k] }
@@ -221,15 +215,13 @@ module CassandraObject
 
       def execute_batch(statements)
         raise 'Statements is empty!' if statements.empty?
-        @consistency = config[:write_consistency] || config[:consistency]
         puts 'cassandra adapter execute batch'
-        puts @consistency
         batch = connection.batch do |b|
           statements.each do |statement|
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch, consistency: @consistency, page_size: config[:page_size])
+        connection.execute(batch, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size])
       end
 
       # SCHEMA
