@@ -151,8 +151,8 @@ Cassandra Object has equivalent methods as ActiveRecord:
 widget = Widget.new
 widget.valid?
 widget = Widget.create(name: 'Acme', price: 100)
-widget.update_attribute(:price, 1200)
-widget.update_attributes(price: 1200, name: 'Acme Corporation')
+widget.update(:price, 1200)
+widget.update(price: 1200, name: 'Acme Corporation')
 widget.attributes = {price: 300}
 widget.price_was
 widget.save

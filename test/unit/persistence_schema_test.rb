@@ -53,7 +53,7 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
 
   test 'update_attributes' do
     issue = IssueSchema.create(title: 'I rule', description: 'lololol')
-    issue.update_attributes(title: 'lollete', description: 'lol')
+    issue.update(title: 'lollete', description: 'lol')
 
     assert !issue.changed?
     assert_equal 'lol', issue.description
@@ -65,14 +65,14 @@ class CassandraObject::PersistenceSchemaTest < CassandraObject::TestCase
     issue.save!
 
     assert_raise CassandraObject::RecordInvalid do
-      issue.update_attributes! title: ''
+      issue.update! title: ''
     end
   end
 
   test 'update nil attributes' do
     issue = IssueSchema.create(title: 'I rule', description: 'lololol')
 
-    issue.update_attributes description: nil
+    issue.update description: nil
 
     issue = IssueSchema.find issue.id
     assert_nil issue.description
