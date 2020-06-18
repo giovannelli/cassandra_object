@@ -139,20 +139,20 @@ module CassandraObject
 
       def execute(statement, arguments = [])
         puts "schemaless adapter: #{statement}"
-        puts @write_consistency
+        puts @consistency
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
-          connection.execute statement, arguments: arguments, consistency: @write_consistency || config[:consistency], page_size: config[:page_size]
+          connection.execute statement, arguments: arguments, consistency: @consistency, page_size: config[:page_size]
         end
       end
 
       def execute_async(queries, arguments = [], per_page = nil, next_cursor = nil)
         puts "schemaless adapter async: #{queries}"
-        puts @write_consistency
+        puts @consistency
         retries = 0
         per_page ||= config[:page_size]
         futures = queries.map { |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: @write_consistency || config[:consistency], page_size: per_page, paging_state: next_cursor
+            connection.execute_async q, arguments: arguments, consistency: @consistency, page_size: per_page, paging_state: next_cursor
           end
         }
         futures.map do |future|
@@ -169,7 +169,7 @@ module CassandraObject
       end
 
       def pre_select(scope, per_page = nil, next_cursor = nil)
-        @write_consistency = nil
+        @consistency = config[:consistency]
         query = "SELECT DISTINCT #{primary_key_column} FROM #{scope.klass.column_family}"
         query << " LIMIT #{scope.limit_value}" if scope.limit_value == 1
         ids = []
@@ -182,7 +182,7 @@ module CassandraObject
       end
 
       def select(scope)
-        @write_consistency = nil
+        @consistency = config[:consistency]
         queries = QueryBuilder.new(self, scope).to_query_async
         queries.compact! if queries.present?
         raise CassandraObject::RecordNotFound if !queries.present?
@@ -227,7 +227,7 @@ module CassandraObject
       end
 
       def write(table, id, attributes, ttl)
-        @write_consistency = config[:write_consistency] || config[:consistency]
+        @consistency = config[:write_consistency] || config[:consistency]
         queries = []
         attributes.each do |column, value|
           if !value.nil?
@@ -244,7 +244,7 @@ module CassandraObject
       end
 
       def delete(table, ids)
-        @write_consistency = config[:write_consistency] || config[:consistency]
+        @consistency = config[:write_consistency] || config[:consistency]
         ids = [ids] if !ids.is_a?(Array)
         arguments = nil
         arguments = ids if ids.size == 1
@@ -253,16 +253,16 @@ module CassandraObject
       end
 
       def execute_batch(statements)
-        @write_consistency = config[:write_consistency] || config[:consistency]
+        @consistency = config[:write_consistency] || config[:consistency]
         puts 'schemaless execute batch'
-        puts @write_consistency
+        puts @consistency
         raise 'Statements is empty!' if statements.empty?
         batch = connection.batch do |b|
           statements.each do |statement|
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch, consistency: @write_consistency, page_size: config[:page_size])
+        connection.execute(batch, consistency: @consistency, page_size: config[:page_size])
       end
 
       # SCHEMA
