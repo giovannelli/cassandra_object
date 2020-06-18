@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 gem 'cassandra-driver'
 require 'cassandra'
 require 'logger'
