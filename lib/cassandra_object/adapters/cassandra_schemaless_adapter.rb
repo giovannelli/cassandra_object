@@ -250,14 +250,15 @@ module CassandraObject
       end
 
       def execute_batch(statements)
-        puts 'schemaless execute batch'
+        consistency = config[:write_consistency] || config[:consistency]
+        puts "schemaless execute batch #{consistency}"
         raise 'Statements is empty!' if statements.empty?
         batch = connection.batch do |b|
           statements.each do |statement|
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size])
+        connection.execute(batch, consistency: consistency, page_size: config[:page_size])
       end
 
       # SCHEMA
