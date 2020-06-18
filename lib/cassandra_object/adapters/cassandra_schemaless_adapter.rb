@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 gem 'cassandra-driver'
 require 'cassandra'
 require 'logger'
@@ -45,10 +47,10 @@ module CassandraObject
 
           if ids.present?
             conditions << if ids.size > 1
-                            "#{@adapter.primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
-                          else
-                            "#{@adapter.primary_key_column} = '#{ids.first}'"
-                          end
+              "#{@adapter.primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+            else
+              "#{@adapter.primary_key_column} = '#{ids.first}'"
+            end
           end
 
           select_values = @scope.select_values.select { |sv| sv != :column1 }
@@ -75,6 +77,7 @@ module CassandraObject
             :connections_per_local_node,
             :connections_per_remote_node,
             :consistency,
+            :write_consistency,
             :credentials,
             :futures_factory,
             :hosts,
@@ -107,7 +110,7 @@ module CassandraObject
           params = cluster_options[policy_key]
           if params
             if params.is_a?(Hash)
-              cluster_options[policy_key] = (class_template % [params[:policy].classify]).constantize.new(*params[:params]||[])
+              cluster_options[policy_key] = (class_template % [params[:policy].classify]).constantize.new(*params[:params] || [])
             else
               cluster_options[policy_key] = (class_template % [params.classify]).constantize.new
             end
@@ -120,6 +123,7 @@ module CassandraObject
                                 idle_timeout: cluster_options[:idle_timeout] || 60,
                                 max_schema_agreement_wait: 1,
                                 consistency: cluster_options[:consistency] || :one,
+                                write_consistency: cluster_options[:write_consistency] || cluster_options[:consistency] || :one,
                                 protocol_version: cluster_options[:protocol_version] || 3,
                                 page_size: cluster_options[:page_size] || 10000
                                })
@@ -134,17 +138,21 @@ module CassandraObject
       end
 
       def execute(statement, arguments = [])
+        puts "schemaless adapter: #{statement}"
+        puts @write_consistency
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
-          connection.execute statement, arguments: arguments, consistency: consistency, page_size: config[:page_size]
+          connection.execute statement, arguments: arguments, consistency: @write_consistency || config[:consistency], page_size: config[:page_size]
         end
       end
 
       def execute_async(queries, arguments = [], per_page = nil, next_cursor = nil)
+        puts "schemaless adapter async: #{queries}"
+        puts @write_consistency
         retries = 0
         per_page ||= config[:page_size]
         futures = queries.map { |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
-            connection.execute_async q, arguments: arguments, consistency: consistency, page_size: per_page, paging_state: next_cursor
+            connection.execute_async q, arguments: arguments, consistency: @write_consistency || config[:consistency], page_size: per_page, paging_state: next_cursor
           end
         }
         futures.map do |future|
@@ -169,7 +177,7 @@ module CassandraObject
           item.rows.each { |x| ids << x[primary_key_column] }
           new_next_cursor = item.paging_state unless item.last_page?
         end
-        return {ids: ids, new_next_cursor: new_next_cursor}
+        { ids: ids, new_next_cursor: new_next_cursor }
       end
 
       def select(scope)
@@ -177,19 +185,19 @@ module CassandraObject
         queries.compact! if queries.present?
         raise CassandraObject::RecordNotFound if !queries.present?
 
-        arguments = scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
-        arguments += scope.where_values.select.each_with_index{ |_, i| i.odd? }.reject{ |c| c.empty? }.map(&:to_s)
+        arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
+        arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
         records = execute_async(queries, arguments).map do |item|
           # pagination
           elems = []
           loop do
-            item.rows.each{ |x| elems << x }
+            item.rows.each { |x| elems << x }
             break if item.last_page?
             item = item.next_page
           end
           elems
         end
-        {results: records.flatten!}
+        { results: records.flatten! }
       end
 
       def select_paginated(scope)
@@ -197,15 +205,15 @@ module CassandraObject
         queries.compact! if queries.present?
         raise CassandraObject::RecordNotFound if !queries.present?
 
-        arguments = scope.select_values.select{ |sv| sv != :column1 }.map(&:to_s)
-        arguments += scope.where_values.select.each_with_index{ |_, i| i.odd? }.reject{ |c| c.empty? }.map(&:to_s)
+        arguments = scope.select_values.select { |sv| sv != :column1 }.map(&:to_s)
+        arguments += scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.empty? }.map(&:to_s)
         new_next_cursor = nil
         records = []
         execute_async(queries, arguments, scope.limit_value, scope.next_cursor).each do |item|
           new_next_cursor = item.paging_state unless item.last_page?
-          item.rows.each{ |x| records << x }
+          item.rows.each { |x| records << x }
         end
-        {results: records, new_next_cursor: new_next_cursor}
+        { results: records, new_next_cursor: new_next_cursor }
       end
 
       def insert(table, id, attributes, ttl = nil)
@@ -217,38 +225,39 @@ module CassandraObject
       end
 
       def write(table, id, attributes, ttl)
+        @write_consistency = config[:write_consistency] || config[:consistency]
         queries = []
-        # puts attributes
         attributes.each do |column, value|
           if !value.nil?
             query = "INSERT INTO #{table} (#{primary_key_column},column1,value) VALUES (?,?,?)"
-            query += " USING TTL #{ttl.to_s}" if !ttl.nil?
+            query += " USING TTL #{ttl}" if !ttl.nil?
             args = [id.to_s, column.to_s, value.to_s]
 
-            queries << {query: query, arguments: args}
+            queries << { query: query, arguments: args }
           else
-            queries << {query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s]}
+            queries << { query: "DELETE FROM #{table} WHERE #{primary_key_column} = ? AND column1= ?", arguments: [id.to_s, column.to_s] }
           end
         end
         execute_batchable(queries)
       end
 
       def delete(table, ids)
+        @write_consistency = config[:write_consistency] || config[:consistency]
         ids = [ids] if !ids.is_a?(Array)
         arguments = nil
         arguments = ids if ids.size == 1
-        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}" #.gsub('?', ids.map { |id| "'#{id}'" }.join(','))
+        statement = "DELETE FROM #{table} WHERE #{create_ids_where_clause(ids)}" # .gsub('?', ids.map { |id| "'#{id}'" }.join(','))
         execute(statement, arguments)
       end
 
       def execute_batch(statements)
-        raise 'No can do' if statements.empty?
+        raise 'Statements is empty!' if statements.empty?
         batch = connection.batch do |b|
           statements.each do |statement|
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch, page_size: config[:page_size])
+        connection.execute(batch, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size])
       end
 
       # SCHEMA
@@ -275,7 +284,7 @@ module CassandraObject
       def schema_execute(cql, keyspace)
         schema_db = Cassandra.cluster cassandra_cluster_options
         connection = schema_db.connect keyspace
-        connection.execute cql, consistency: consistency
+        connection.execute cql, consistency: config[:write_consistency] || config[:consistency]
       end
 
       def cassandra_version
@@ -283,14 +292,6 @@ module CassandraObject
       end
 
       # /SCHEMA
-
-      def consistency
-        defined?(@consistency) ? @consistency : nil
-      end
-
-      def consistency=(val)
-        @consistency = val
-      end
 
       def statement_create_with_options(stmt, options)
         if !options.nil?
@@ -338,9 +339,8 @@ module CassandraObject
         return ids if ids.empty?
         ids = ids.first if ids.is_a?(Array) && ids.one?
         sql = ids.is_a?(Array) ? "#{primary_key_column} IN (#{ids.map { |id| "'#{id}'" }.join(',')})" : "#{primary_key_column} = ?"
-        return sql
+        sql
       end
-
     end
   end
 end
