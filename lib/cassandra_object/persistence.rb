@@ -26,6 +26,7 @@ module CassandraObject
       end
 
       def delete_all
+        @consistency = config[:write_consistency] || config[:consistency]
         adapter.execute "TRUNCATE #{column_family}"
       end
 
