@@ -122,8 +122,8 @@ module CassandraObject
                                 heartbeat_interval: cluster_options.keys.include?(:heartbeat_interval) ? cluster_options[:heartbeat_interval] : 30,
                                 idle_timeout: cluster_options[:idle_timeout] || 60,
                                 max_schema_agreement_wait: 1,
-                                consistency: cluster_options[:consistency] || :one,
-                                write_consistency: cluster_options[:write_consistency] || cluster_options[:consistency] || :one,
+                                consistency: cluster_options[:consistency] || :local_one,
+                                write_consistency: cluster_options[:write_consistency] || cluster_options[:consistency] || :local_one,
                                 protocol_version: cluster_options[:protocol_version] || 3,
                                 page_size: cluster_options[:page_size] || 10000
                                })
@@ -169,6 +169,7 @@ module CassandraObject
       end
 
       def pre_select(scope, per_page = nil, next_cursor = nil)
+        @write_consistency = nil
         query = "SELECT DISTINCT #{primary_key_column} FROM #{scope.klass.column_family}"
         query << " LIMIT #{scope.limit_value}" if scope.limit_value == 1
         ids = []
@@ -181,6 +182,7 @@ module CassandraObject
       end
 
       def select(scope)
+        @write_consistency = nil
         queries = QueryBuilder.new(self, scope).to_query_async
         queries.compact! if queries.present?
         raise CassandraObject::RecordNotFound if !queries.present?
