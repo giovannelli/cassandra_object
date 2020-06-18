@@ -221,12 +221,15 @@ module CassandraObject
 
       def execute_batch(statements)
         raise 'Statements is empty!' if statements.empty?
+        @write_consistency = config[:write_consistency] || config[:consistency]
+        puts "cassandra adapter execute batch"
+        puts @write_consistenc
         batch = connection.batch do |b|
           statements.each do |statement|
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch, consistency: config[:write_consistency] || config[:consistency], page_size: config[:page_size])
+        connection.execute(batch, consistency: @write_consistency , page_size: config[:page_size])
       end
 
       # SCHEMA
