@@ -139,7 +139,7 @@ module CassandraObject
 
       def execute(statement, arguments = [])
         consistency = config[:write_consistency] || config[:consistency]
-        puts "schemaless adapter: #{consistency}"
+        # puts "schemaless adapter: #{consistency}"
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           connection.execute statement, arguments: arguments, consistency: consistency, page_size: config[:page_size]
         end
@@ -147,7 +147,7 @@ module CassandraObject
 
       def execute_async(queries, arguments = [], per_page = nil, next_cursor = nil)
         consistency = config[:consistency]
-        puts "schemaless adapter async: #{consistency}"
+        # puts "schemaless adapter async: #{consistency}"
 
         retries = 0
         per_page ||= config[:page_size]
@@ -251,7 +251,7 @@ module CassandraObject
 
       def execute_batch(statements)
         consistency = config[:write_consistency] || config[:consistency]
-        puts "schemaless execute batch #{consistency}"
+        # puts "schemaless execute batch #{consistency}"
         raise 'Statements is empty!' if statements.empty?
         batch = connection.batch do |b|
           statements.each do |statement|

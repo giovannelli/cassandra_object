@@ -125,7 +125,7 @@ module CassandraObject
 
       def execute(statement, arguments = [])
         consistency = config[:write_consistency] || config[:consistency]
-        puts "cassandra adapter: #{consistency}"
+        # puts "cassandra adapter: #{consistency}"
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           type_hints = []
           arguments.each { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } unless arguments.nil?
@@ -135,7 +135,7 @@ module CassandraObject
 
       def execute_async(queries, arguments = [])
         consistency = config[:consistency]
-        puts "execute_async adapter: #{consistency}"
+        # puts "execute_async adapter: #{consistency}"
         retries = 0
         futures = queries.map do |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
