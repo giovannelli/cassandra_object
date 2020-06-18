@@ -15,7 +15,7 @@ CassandraObject::Base.config = {
   connections_per_local_node: 4,
   schema_refresh_delay: 0.1,
   schema_refresh_timeout: 0.1,
-  load_balancing_policy: Cassandra::LoadBalancing::Policies::TokenAware.new,
+  load_balancing_policy: Cassandra::LoadBalancing::Policies::RoundRobin.new,
   reconnection_policy: { policy: 'Constant', params: [5] },
   retry_policy: 'Default',
   # connections_per_remote_node: nil,
