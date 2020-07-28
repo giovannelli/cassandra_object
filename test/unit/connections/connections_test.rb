@@ -16,8 +16,6 @@ class CassandraObject::ConnectionsTest < CassandraObject::TestCase
     threads = []
 
     (0..10).collect do |i|
-
-      # puts "spawn thread #{i}"
       thr = Thread.new do
         begin
           IssueSchema.find(ids)

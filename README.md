@@ -1,7 +1,7 @@
 # Cassandra Object
 [![Build Status](https://secure.travis-ci.org/giovannelli/cassandra_object.png)](http://travis-ci.org/giovannelli/cassandra_object) [![Code Climate](https://codeclimate.com/github/giovannelli/cassandra_object/badges/gpa.svg)](https://codeclimate.com/github/giovannelli/cassandra_object)
 
-Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord. 
+Cassandra Object uses ActiveModel to mimic much of the behavior in ActiveRecord.
 Use cql3 provided by ruby-driver gem and uses the old thrift structure with the possible option at [this link](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/create_table_r.html?hl=create%2Ctable):
 
 ```shell
@@ -118,16 +118,16 @@ You can define a custom configuration for the cassandra connection, allowing you
 ```ruby
 class Widget < CassandraObject::BaseSchema
   string :name
-  
+
   def self.custom_config
-    #return custom cassandra configuration  
+    #return custom cassandra configuration
     { }
   end
 end
 ```
- 
+
 ## Using with Cassandra
-  
+
 Add a config/cassandra.yml:
 
 ```yaml
@@ -138,6 +138,7 @@ development:
   connect_timeout: 0.1,
   request_timeout: 0.1,
   consistency: :any/:one/:two/:three/:quorum/:all/:local_quorum/:each_quorum/:serial/:local_serial/:local_one,
+  write_consistency: :any/:one/:two/:three/:quorum/:all/:local_quorum/:each_quorum/:serial/:local_serial/:local_one,
   protocol_version: 3,
   page_size: 10000,
   trace: true/false

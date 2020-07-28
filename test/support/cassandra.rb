@@ -38,9 +38,6 @@ CassandraObject::Schemaless.create_column_family 'IssueDynamics'
 CassandraObject::Schemaless.create_column_family 'IssuesCustomConfig'
 CassandraObject::Schema.create_column_family 'IssueSchemaFathers', { attributes: 'id text, title text, field float, created_at timestamp, updated_at timestamp, PRIMARY KEY (id)', options: {} }
 CassandraObject::Schema.create_column_family 'IssueSchemaChildren', { attributes: 'id text, title text, description text, field float, created_at timestamp, updated_at timestamp, issue_schema_father_id text, PRIMARY KEY (id)', options: {} }
-CassandraObject::BaseSchemaless.adapter.consistency = :quorum
-CassandraObject::BaseSchemalessDynamic.adapter.consistency = :quorum
-CassandraObject::BaseSchema.adapter.consistency = :quorum
 
 CassandraObject::Base.class_eval do
   class_attribute :created_records

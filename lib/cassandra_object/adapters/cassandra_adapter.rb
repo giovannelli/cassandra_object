@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 gem 'cassandra-driver'
 require 'cassandra'
 require 'logger'
@@ -6,7 +8,6 @@ module CassandraObject
   module Adapters
     class CassandraAdapter < AbstractAdapter
       class QueryBuilder
-
         def initialize(adapter, scope)
           @adapter = adapter
           @scope = scope
@@ -27,7 +28,7 @@ module CassandraObject
                 "SELECT #{select_string} FROM #{@scope.klass.column_family}",
                 where_string_async(nil)
             ]
-            str << "ALLOW FILTERING" if @scope.klass.allow_filtering
+            str << 'ALLOW FILTERING' if @scope.klass.allow_filtering
             return [] << str.delete_if(&:blank?) * ' '
           end
 
@@ -43,10 +44,10 @@ module CassandraObject
           wheres = @scope.where_values.dup.select.each_with_index { |_, i| i.even? }
           if ids.present?
             wheres << if ids.size > 1
-                        "#{@scope._key} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
-                      else
-                        "#{@scope._key} = '#{ids.first}'"
-                      end
+              "#{@scope._key} IN (#{ids.map { |id| "'#{id}'" }.join(',')})"
+            else
+              "#{@scope._key} = '#{ids.first}'"
+            end
           end
           "WHERE #{wheres * ' AND '}" if wheres.any?
         end
@@ -62,6 +63,7 @@ module CassandraObject
             :connections_per_local_node,
             :connections_per_remote_node,
             :consistency,
+            :write_consistency,
             :credentials,
             :futures_factory,
             :hosts,
@@ -94,7 +96,7 @@ module CassandraObject
           params = cluster_options[policy_key]
           if params
             if params.is_a?(Hash)
-              cluster_options[policy_key] = (class_template % [params[:policy].classify]).constantize.new(*params[:params]||[])
+              cluster_options[policy_key] = (class_template % [params[:policy].classify]).constantize.new(*params[:params] || [])
             else
               cluster_options[policy_key] = (class_template % [params.classify]).constantize.new
             end
@@ -106,7 +108,8 @@ module CassandraObject
                                 heartbeat_interval: cluster_options.keys.include?(:heartbeat_interval) ? cluster_options[:heartbeat_interval] : 30,
                                 idle_timeout: cluster_options[:idle_timeout] || 60,
                                 max_schema_agreement_wait: 1,
-                                consistency: cluster_options[:consistency] || :one,
+                                consistency: cluster_options[:consistency] || :local_one,
+                                write_consistency: cluster_options[:write_consistency] || cluster_options[:consistency] || :local_one,
                                 protocol_version: cluster_options[:protocol_version] || 3,
                                 page_size: cluster_options[:page_size] || 10000
                                })
@@ -121,6 +124,8 @@ module CassandraObject
       end
 
       def execute(statement, arguments = [])
+        consistency = config[:write_consistency] || config[:consistency]
+        # puts "cassandra adapter: #{consistency}"
         ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: statement) do
           type_hints = []
           arguments.each { |a| type_hints << CassandraObject::Types::TypeHelper.guess_type(a) } unless arguments.nil?
@@ -129,6 +134,8 @@ module CassandraObject
       end
 
       def execute_async(queries, arguments = [])
+        consistency = config[:consistency]
+        # puts "execute_async adapter: #{consistency}"
         retries = 0
         futures = queries.map do |q|
           ActiveSupport::Notifications.instrument('cql.cassandra_object', cql: q) do
@@ -151,8 +158,8 @@ module CassandraObject
       def select(scope)
         queries = QueryBuilder.new(self, scope).to_query_async
         # todo paginate
-        arguments = scope.where_values.select.each_with_index{ |_, i| i.odd? }.reject{ |c| c.blank? }
-        cql_rows = execute_async(queries, arguments).map{|item| item.rows.map{|x| x}}.flatten!
+        arguments = scope.where_values.select.each_with_index { |_, i| i.odd? }.reject { |c| c.blank? }
+        cql_rows = execute_async(queries, arguments).map { |item| item.rows.map { |x| x } }.flatten!
         cql_rows.each do |cql_row|
           attributes = cql_row.to_hash
           key = attributes.delete(scope._key)
@@ -170,31 +177,31 @@ module CassandraObject
 
       def write(table, id, attributes, ttl = nil)
         statement = "INSERT INTO #{table} (#{(attributes.keys).join(',')}) VALUES (#{(['?'] * attributes.size).join(',')})"
-        statement += " USING TTL #{ttl.to_s}" if ttl.present?
+        statement += " USING TTL #{ttl}" if ttl.present?
         arguments = attributes.values
         execute(statement, arguments)
       end
 
       def write_update(table, id, attributes)
-        queries =[]
+        queries = []
         # id here is the name of the key of the model
         id_value = attributes[id]
         if (not_nil_attributes = attributes.reject { |key, value| value.nil? }).any?
           statement = "INSERT INTO #{table} (#{(not_nil_attributes.keys).join(',')}) VALUES (#{(['?'] * not_nil_attributes.size).join(',')})"
-          queries << {query: statement, arguments: not_nil_attributes.values}
+          queries << { query: statement, arguments: not_nil_attributes.values }
         end
         if (nil_attributes = attributes.select { |key, value| value.nil? }).any?
-          queries << {query: "DELETE #{nil_attributes.keys.join(',')} FROM #{table} WHERE #{id} = ?", arguments: [id_value.to_s]}
+          queries << { query: "DELETE #{nil_attributes.keys.join(',')} FROM #{table} WHERE #{id} = ?", arguments: [id_value.to_s] }
         end
         execute_batchable(queries)
       end
 
       def delete(scope, ids, attributes = {})
         ids = [ids] if !ids.is_a?(Array)
-        statement = "DELETE FROM #{scope.column_family} WHERE #{scope._key} IN (#{ids.map{|id| '?'}.join(',')})"
+        statement = "DELETE FROM #{scope.column_family} WHERE #{scope._key} IN (#{ids.map { |id| '?' }.join(',')})"
         arguments = ids
         unless attributes.blank?
-          statement += " AND #{attributes.keys.map{ |k| "#{k} = ?" }.join(' AND ')}"
+          statement += " AND #{attributes.keys.map { |k| "#{k} = ?" }.join(' AND ')}"
           arguments += attributes.values
         end
         execute(statement, arguments)
@@ -202,20 +209,23 @@ module CassandraObject
 
       def delete_single(obj)
         keys = obj.class._keys
-        wheres = keys.map{ |k| "#{k} = ?" }.join(' AND ')
-        arguments = keys.map{ |k| obj.attributes[k] }
+        wheres = keys.map { |k| "#{k} = ?" }.join(' AND ')
+        arguments = keys.map { |k| obj.attributes[k] }
         statement = "DELETE FROM #{obj.class.column_family} WHERE #{wheres}"
         execute(statement, arguments)
       end
 
       def execute_batch(statements)
-        raise 'No can do' if statements.empty?
+        raise 'Statements is empty!' if statements.empty?
+        consistency = config[:write_consistency] || config[:consistency]
+        # puts "cassandra adapter execute batch #{consistency}"
+
         batch = connection.batch do |b|
           statements.each do |statement|
             b.add(statement[:query], arguments: statement[:arguments])
           end
         end
-        connection.execute(batch, page_size: config[:page_size])
+        connection.execute(batch, consistency: consistency, page_size: config[:page_size])
       end
 
       # SCHEMA
@@ -244,7 +254,7 @@ module CassandraObject
       def schema_execute(cql, keyspace)
         schema_db = Cassandra.cluster cassandra_cluster_options
         connection = schema_db.connect keyspace
-        connection.execute cql, consistency: consistency
+        connection.execute cql, consistency: config[:write_consistency] || config[:consistency]
       end
 
       def cassandra_version
@@ -252,14 +262,6 @@ module CassandraObject
       end
 
       # /SCHEMA
-
-      def consistency
-        defined?(@consistency) ? @consistency : nil
-      end
-
-      def consistency=(val)
-        @consistency = val
-      end
 
       def statement_create_with_options(stmt, options = '')
         if !options.nil?
